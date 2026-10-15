@@ -205,7 +205,7 @@ export function CreateTripModal({
       <div className="bg-slate-900 border border-rose-900/40 text-slate-100 rounded-xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
         
         {/* Header Modal - Merah Hati theme */}
-        <div className="bg-gradient-to-r from-[#4c0519] via-[#881337] to-[#700c1e] px-6 py-4 flex items-center justify-between border-b border-rose-900/60 shrink-0">
+        <div className="bg-linear-to-r from-[#4c0519] via-[#881337] to-[#700c1e] px-6 py-4 flex items-center justify-between border-b border-rose-900/60 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg text-amber-300">
               <FileText className="w-5 h-5" />
@@ -511,7 +511,7 @@ export function CreateTripModal({
           {/* ======================================================= */}
           <div className="lg:col-span-5 space-y-4">
             
-            <div className="bg-gradient-to-b from-slate-800 to-slate-900 border border-rose-900/60 rounded-xl p-5 shadow-lg relative overflow-hidden">
+            <div className="bg-linear-to-b from-slate-800 to-slate-900 border border-rose-900/60 rounded-xl p-5 shadow-lg relative overflow-hidden">
               <div className="flex items-center gap-2 mb-4 text-rose-300 font-bold border-b border-rose-900/40 pb-3">
                 <Calculator className="w-5 h-5 text-amber-400" />
                 <span className="text-sm tracking-wide text-white">LIVE MARGIN & PROFIT CALCULATOR</span>
@@ -723,7 +723,7 @@ export function CreateTripModal({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-2/3 bg-gradient-to-r from-[#881337] to-[#be123c] hover:from-[#9f1239] hover:to-[#e11d48] text-white font-bold py-3 rounded-lg text-sm shadow-lg shadow-rose-950/40 flex items-center justify-center gap-2 transition cursor-pointer"
+                className="w-2/3 bg-linear-to-r from-[#881337] to-[#be123c] hover:from-[#9f1239] hover:to-[#e11d48] text-white font-bold py-3 rounded-lg text-sm shadow-lg shadow-rose-950/40 flex items-center justify-center gap-2 transition cursor-pointer"
               >
                 {isSubmitting ? (
                   <span>Menyimpan...</span>

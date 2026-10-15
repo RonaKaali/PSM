@@ -596,7 +596,13 @@ export default function HomePage() {
       <footer className="no-print bg-[#380412] border-t border-rose-900/60 text-slate-300 py-6 mt-12 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <PSMLogo size={32} />
+            <div className="bg-white p-1 rounded shadow-sm shrink-0">
+              <img
+                src="/logopsm.png"
+                alt="Logo PT. PSM"
+                className="h-8 w-auto object-contain"
+              />
+            </div>
             <div>
               <span className="font-bold text-white block">PT. PUTRA SAIJAAN MANDIRI</span>
               <span className="text-[11px] text-rose-300">

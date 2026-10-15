@@ -23,14 +23,18 @@ export function Navbar({
   onExportExcel,
 }: NavbarProps) {
   return (
-    <header className="app-header bg-gradient-to-r from-[#380412] via-[#780d28] to-[#500718] text-white border-b border-rose-900/60 shadow-xl sticky top-0 z-40">
+    <header className="app-header bg-linear-to-r from-[#380412] via-[#780d28] to-[#500718] text-white border-b border-rose-900/60 shadow-xl sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
           {/* Logo & Company Identity */}
           <div className="flex items-center gap-4">
-            <div className="bg-white p-1.5 rounded-full shadow-md border border-rose-300/40">
-              <PSMLogo size={46} light={false} />
+            <div className="bg-white p-1 rounded-lg shadow-md border border-rose-300/40 shrink-0">
+              <img
+                src="/logopsm.png"
+                alt="Logo PT. PSM"
+                className="h-11 w-auto object-contain"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -118,7 +122,7 @@ export function Navbar({
             {currentRole !== 'viewer' && (
               <button
                 onClick={onOpenCreateModal}
-                className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-4 py-2 rounded-lg text-xs sm:text-sm shadow-lg shadow-amber-900/30 transition cursor-pointer"
+                className="flex items-center gap-2 bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-4 py-2 rounded-lg text-xs sm:text-sm shadow-lg shadow-amber-900/30 transition cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4 text-slate-950" />
                 <span>+ Surat Jalan</span>

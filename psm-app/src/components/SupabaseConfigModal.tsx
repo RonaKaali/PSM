@@ -25,7 +25,7 @@ export function SupabaseConfigModal({ onClose }: SupabaseConfigModalProps) {
       <div className="bg-slate-900 border border-rose-900/50 text-slate-100 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#4c0519] via-[#881337] to-[#700c1e] px-6 py-4 flex items-center justify-between border-b border-rose-900">
+        <div className="bg-linear-to-r from-[#4c0519] via-[#881337] to-[#700c1e] px-6 py-4 flex items-center justify-between border-b border-rose-900">
           <div className="flex items-center gap-3">
             <Database className="w-5 h-5 text-amber-400" />
             <div>

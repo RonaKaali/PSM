@@ -73,9 +73,12 @@ export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
           {/* 1. KOP SURAT RESMI */}
           <div className="flex items-start gap-5 pb-3">
             <div className="flex flex-col items-center shrink-0">
-              <PSMLogo size={64} />
-              <span className="text-[11px] font-black tracking-wider text-black mt-1">PT. PSM</span>
-              <span className="text-[7px] font-semibold text-slate-700 tracking-tighter">PUTRA SAIJAAN MANDIRI</span>
+              <img
+                src="/logopsm.png"
+                alt="Logo PT. PSM"
+                className="h-16 w-auto object-contain"
+              />
+              <span className="text-[7.5px] font-bold text-black tracking-tight mt-0.5">PUTRA SAIJAAN MANDIRI</span>
             </div>
 
             <div className="flex-1 pt-1">
@@ -219,8 +222,12 @@ export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
                 
                 {/* Visual Stamp PT. PSM */}
                 <div className="flex flex-col items-center relative">
-                  <div className="absolute -top-12 opacity-80">
-                    <PSMLogo size={46} />
+                  <div className="absolute -top-14 opacity-85">
+                    <img
+                      src="/logopsm.png"
+                      alt="Stamp PT. PSM"
+                      className="h-14 w-auto object-contain"
+                    />
                   </div>
                   <div className="w-3/4 border-b border-black mb-1"></div>
                   <span className="font-bold uppercase tracking-wider">SUPPLIER</span>

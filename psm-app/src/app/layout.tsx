@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     'Sistem Manajemen Surat Jalan BBM dan Kalkulator Margin Operasional Truk PT. Putra Saijaan Mandiri Kotabaru, Kalimantan Selatan',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/logopsm.png',
   },
 };
 
