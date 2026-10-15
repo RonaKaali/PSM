@@ -13,6 +13,65 @@ interface CreateTripModalProps {
   onSaved: (trip: TripWithFinance) => void;
 }
 
+interface CurrencyInputProps {
+  value: number;
+  onChange: (val: number) => void;
+  className?: string;
+  placeholder?: string;
+  size?: 'normal' | 'large';
+}
+
+function CurrencyInput({
+  value,
+  onChange,
+  className = '',
+  placeholder = '0',
+  size = 'normal',
+}: CurrencyInputProps) {
+  const formatVal = (v: number) => (v ? v.toLocaleString('id-ID') : '');
+  const [text, setText] = useState<string>(formatVal(value));
+
+  useEffect(() => {
+    setText(formatVal(value));
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawDigits = e.target.value.replace(/\D/g, '');
+    if (!rawDigits) {
+      setText('');
+      onChange(0);
+      return;
+    }
+    const num = parseInt(rawDigits, 10);
+    setText(num.toLocaleString('id-ID'));
+    onChange(num);
+  };
+
+  const isLarge = size === 'large';
+
+  return (
+    <div className="relative">
+      <span
+        className={`absolute left-3 text-slate-400 font-bold select-none ${
+          isLarge ? 'top-2.5 text-sm' : 'top-1.5 text-xs'
+        }`}
+      >
+        Rp
+      </span>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={text}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className={`w-full bg-slate-950 border border-slate-700 focus:border-rose-500 rounded-md text-white font-bold focus:outline-none transition ${
+          isLarge ? 'pl-10 pr-3 py-2 text-base text-amber-300' : 'pl-9 pr-3 py-1.5 text-sm'
+        } ${className}`}
+      />
+    </div>
+  );
+}
+
 export function CreateTripModal({
   vehicles,
   existingTrips,
@@ -546,15 +605,13 @@ export function CreateTripModal({
                     <label className="text-[11px] text-slate-400 block mb-1">
                       Total Borongan (Rp)
                     </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2 text-slate-400 text-sm font-semibold">Rp</span>
-                      <input
-                        type="number"
-                        value={grossRevenue || ''}
-                        onChange={(e) => setGrossRevenue(Number(e.target.value))}
-                        className="w-full bg-slate-950 border border-rose-900/60 focus:border-rose-500 rounded-md pl-10 pr-3 py-2 text-base text-amber-300 font-bold"
-                      />
-                    </div>
+                    <CurrencyInput
+                      value={grossRevenue}
+                      onChange={setGrossRevenue}
+                      size="large"
+                      placeholder="0"
+                      className="border-rose-900/60 focus:border-rose-500"
+                    />
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
@@ -562,11 +619,10 @@ export function CreateTripModal({
                       <label className="text-[11px] text-slate-400 block mb-1">
                         Tarif per Liter/Ton (Rp)
                       </label>
-                      <input
-                        type="number"
-                        value={unitRate || ''}
-                        onChange={(e) => setUnitRate(Number(e.target.value))}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-2 text-sm text-white font-bold"
+                      <CurrencyInput
+                        value={unitRate}
+                        onChange={setUnitRate}
+                        placeholder="0"
                       />
                     </div>
                     <div>
@@ -592,11 +648,10 @@ export function CreateTripModal({
                     <span>1. Biaya BBM / Solar</span>
                     <span className="text-slate-400">Solar Truk Tangki</span>
                   </div>
-                  <input
-                    type="number"
-                    value={fuelCost || ''}
-                    onChange={(e) => setFuelCost(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-white font-semibold"
+                  <CurrencyInput
+                    value={fuelCost}
+                    onChange={setFuelCost}
+                    placeholder="0"
                   />
                 </div>
 
@@ -605,11 +660,10 @@ export function CreateTripModal({
                     <span>2. Uang Jalan / Saku Supir</span>
                     <span className="text-slate-400">Honor Pengemudi</span>
                   </div>
-                  <input
-                    type="number"
-                    value={driverAllowance || ''}
-                    onChange={(e) => setDriverAllowance(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-white font-semibold"
+                  <CurrencyInput
+                    value={driverAllowance}
+                    onChange={setDriverAllowance}
+                    placeholder="0"
                   />
                 </div>
 
@@ -618,11 +672,10 @@ export function CreateTripModal({
                     <span>3. Tiket Ferry & Tol</span>
                     <span className="text-slate-400">Penyeberangan Batulicin/Tol</span>
                   </div>
-                  <input
-                    type="number"
-                    value={ferryTollCost || ''}
-                    onChange={(e) => setFerryTollCost(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-white font-semibold"
+                  <CurrencyInput
+                    value={ferryTollCost}
+                    onChange={setFerryTollCost}
+                    placeholder="0"
                   />
                 </div>
 
@@ -631,11 +684,10 @@ export function CreateTripModal({
                     <span>4. Segel & Retribusi</span>
                     <span className="text-slate-400">Segel Tangki & Timbangan</span>
                   </div>
-                  <input
-                    type="number"
-                    value={retributionSealCost || ''}
-                    onChange={(e) => setRetributionSealCost(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-white font-semibold"
+                  <CurrencyInput
+                    value={retributionSealCost}
+                    onChange={setRetributionSealCost}
+                    placeholder="0"
                   />
                 </div>
 
@@ -645,12 +697,10 @@ export function CreateTripModal({
                     <span className="text-slate-400">Bongkar/Kawal dsb</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="number"
-                      value={otherCosts || ''}
-                      onChange={(e) => setOtherCosts(Number(e.target.value))}
-                      placeholder="Rp"
-                      className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-white font-semibold"
+                    <CurrencyInput
+                      value={otherCosts}
+                      onChange={setOtherCosts}
+                      placeholder="0"
                     />
                     <input
                       type="text"
@@ -693,7 +743,7 @@ export function CreateTripModal({
                   {finCalc.marginPercentage >= 25 ? (
                     <div className="flex items-center gap-2 bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-bold">
                       <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                      <span>MARGIn SEHAT (Sangat Menguntungkan)</span>
+                      <span>MARGIN SEHAT (Sangat Menguntungkan)</span>
                     </div>
                   ) : finCalc.marginPercentage >= 10 ? (
                     <div className="flex items-center gap-2 bg-amber-950/60 border border-amber-500/40 text-amber-300 px-3 py-1.5 rounded-lg text-xs font-bold">
