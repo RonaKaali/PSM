@@ -257,12 +257,35 @@ function setLocalDestinations(destinations: DestinationCustomer[]) {
 
 export function getVehicleCapacity(vehicle?: Partial<Vehicle> | null): string {
   if (!vehicle) return '5.000 L';
-  const text = `${vehicle.plate_number || ''} ${vehicle.notes || ''} ${vehicle.vehicle_type || ''}`.toUpperCase();
-  // 10.000 L: DA 8485 TG, DA 8530 GO, DA 8247 BV
-  if (text.includes('8485') || text.includes('8530') || text.includes('8247') || text.includes('10')) {
+  const plate = (vehicle.plate_number || '').toUpperCase().replace(/\s+/g, '');
+  const text = `${vehicle.notes || ''} ${vehicle.vehicle_type || ''}`.toUpperCase();
+
+  // 1. Armada 5.000 L (5 KL): DA 8101 ZR, DA 8537 TG, DA 8278 JL
+  if (
+    plate.includes('8101') ||
+    plate.includes('8537') ||
+    plate.includes('8278') ||
+    text.includes('5.000') ||
+    text.includes('5000') ||
+    text.includes('5 KL') ||
+    text.includes('5KL')
+  ) {
+    return '5.000 L';
+  }
+
+  // 2. Armada 10.000 L (10 KL): DA 8485 TG, DA 8530 GO, DA 8247 BV
+  if (
+    plate.includes('8485') ||
+    plate.includes('8530') ||
+    plate.includes('8247') ||
+    text.includes('10.000') ||
+    text.includes('10000') ||
+    text.includes('10 KL') ||
+    text.includes('10KL')
+  ) {
     return '10.000 L';
   }
-  // 5.000 L: DA 8537 TG, DA 8101 ZR, DA 8278 JL
+
   return '5.000 L';
 }
 
@@ -299,11 +322,15 @@ function getLocalVehicles(): Vehicle[] {
       if (v1Data) {
         localStorage.removeItem('psm_vehicles_v1');
       }
-      localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify(INITIAL_VEHICLES));
-      return INITIAL_VEHICLES.map(normalizeVehicle);
+      const initial = INITIAL_VEHICLES.map(normalizeVehicle);
+      localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify(initial));
+      return initial;
     }
     const parsed: Vehicle[] = JSON.parse(data);
-    return parsed.map(normalizeVehicle);
+    const normalized = parsed.map(normalizeVehicle);
+    // Update local storage so stale values like DA 8101 ZR 10.000 L are permanently corrected
+    localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify(normalized));
+    return normalized;
   } catch {
     return INITIAL_VEHICLES.map(normalizeVehicle);
   }
