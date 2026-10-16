@@ -34,16 +34,27 @@
     margin: 8mm 10mm 8mm 10mm;
   }
   
-  html, body {
+  /* Force all page containers, body, and root elements to pure white */
+  html,
+  body,
+  #__next,
+  .min-h-screen,
+  .print-modal-overlay,
+  .print-modal-container,
+  .printable-document {
     background: #ffffff !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
     font-size: 11pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    margin: 0 !important;
-    padding: 0 !important;
     width: 100% !important;
-    height: auto !important;
+    min-height: 100% !important;
   }
 
   /* Hide app navigation, main container, footer, and buttons during print */
@@ -58,15 +69,17 @@
     display: none !important;
   }
 
-  /* Ensure modal backdrop and container become clean full-page paper container */
+  /* Force modal backdrop and container to become clean full-page pure white paper */
   .print-modal-overlay {
     position: static !important;
     display: block !important;
-    background: transparent !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     padding: 0 !important;
     margin: 0 !important;
     overflow: visible !important;
     width: 100% !important;
+    min-height: 100% !important;
     height: auto !important;
     box-shadow: none !important;
     border: none !important;
@@ -83,26 +96,31 @@
     width: 100% !important;
     max-width: 100% !important;
     overflow: visible !important;
-    background: white !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
   }
 
   .printable-document {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
+    min-height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
-    background: white !important;
-    color: black !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
   }
 
   /* Force borders to be crisp black in print */
   .printable-document table,
   .printable-document th,
   .printable-document td,
-  .printable-document .border-black {
+  .printable-document .border-black,
+  .printable-document .border-b,
+  .printable-document .border-r {
     border-color: #000000 !important;
   }
 }

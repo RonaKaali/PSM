@@ -46,7 +46,7 @@ export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-2 md:p-6 overflow-y-auto print:p-0 print:static print:bg-white print:overflow-visible print-modal-overlay">
       {/* Container wrapper */}
-      <div className="relative bg-white text-black w-full max-w-4xl rounded-lg shadow-2xl overflow-hidden my-auto border border-slate-300 print:border-none print:shadow-none print:rounded-none print:max-w-none print:w-full print:m-0 print-modal-container">
+      <div className="relative bg-white text-black w-full max-w-4xl rounded-lg shadow-2xl overflow-hidden my-auto border border-slate-300 print:border-none print:shadow-none print:rounded-none print:max-w-none print:w-full print:m-0 print:bg-white print-modal-container">
         
         {/* Modal Action Header (Hidden during actual print) */}
         <div className="no-print print:hidden bg-[#4c0519] text-white px-6 py-3.5 flex items-center justify-between border-b border-rose-900">
@@ -79,7 +79,7 @@ export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
         {/* ============================================================== */}
         {/* PRINTABLE PHYSICAL SURAT JALAN (EXACT 1:1 REPLICA)             */}
         {/* ============================================================== */}
-        <div className="printable-document p-8 md:p-12 bg-white text-black font-sans leading-tight">
+        <div className="printable-document p-8 md:p-12 bg-white text-black font-sans leading-tight print:bg-white print:p-6 print:w-full print:min-h-full">
           
           {/* 1. KOP SURAT RESMI */}
           <div className="flex items-start gap-5 pb-3">

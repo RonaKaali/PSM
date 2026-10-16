@@ -152,7 +152,7 @@ export default function HomePage() {
   const isSuperAdmin = currentUser.role === 'super_admin';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans ${printingTrip ? 'print:bg-white print:text-black print:min-h-0' : ''}`}>
       
       {/* 1. Navbar */}
       <div className="no-print print:hidden">
