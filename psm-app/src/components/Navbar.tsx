@@ -1,27 +1,32 @@
 'use client';
 
 import React from 'react';
-import { PSMLogo } from './PSMLogo';
-import { PlusCircle, FileSpreadsheet, Truck, Database, Shield, UserCheck } from 'lucide-react';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { PlusCircle, FileSpreadsheet, Truck, LogOut, Shield, User, Building2 } from 'lucide-react';
+import { AuthUser } from './LoginPage';
 
 interface NavbarProps {
-  currentRole: 'admin' | 'finance' | 'viewer';
-  onRoleChange: (role: 'admin' | 'finance' | 'viewer') => void;
   onOpenCreateModal: () => void;
-  onOpenVehicleModal: () => void;
-  onOpenSupabaseModal: () => void;
+  onOpenVehicleModal?: () => void;
+  onOpenDestinationModal?: () => void;
+  vehiclesCount?: number;
+  destinationsCount?: number;
   onExportExcel: () => void;
+  currentUser: AuthUser;
+  onLogout: () => void;
 }
 
 export function Navbar({
-  currentRole,
-  onRoleChange,
   onOpenCreateModal,
   onOpenVehicleModal,
-  onOpenSupabaseModal,
+  onOpenDestinationModal,
+  vehiclesCount = 6,
+  destinationsCount = 12,
   onExportExcel,
+  currentUser,
+  onLogout,
 }: NavbarProps) {
+  const isSuperAdmin = currentUser.role === 'super_admin';
+
   return (
     <header className="app-header bg-linear-to-r from-[#380412] via-[#780d28] to-[#500718] text-white border-b border-rose-900/60 shadow-xl sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -46,69 +51,58 @@ export function Navbar({
                 </span>
               </div>
               <p className="text-xs text-rose-200 font-medium">
-                Sistem Surat Jalan Armada BBM & Kalkulator Margin Operasional
+                Sistem Surat Jalan Armada &amp; Perhitungan Margin Operasional
               </p>
             </div>
           </div>
 
-          {/* Right Control Bar */}
+          {/* Right Action Bar */}
           <div className="flex items-center gap-2 sm:gap-3">
-            
-            {/* Role Switcher */}
-            <div className="hidden md:flex items-center bg-black/30 border border-rose-900/50 rounded-lg p-1 text-xs">
-              <span className="px-2 text-rose-300 font-semibold flex items-center gap-1">
+
+            {/* User Badge */}
+            <div className="hidden sm:flex items-center gap-1.5 bg-black/30 border border-rose-900/50 rounded-lg px-3 py-1.5">
+              {isSuperAdmin ? (
                 <Shield className="w-3.5 h-3.5 text-amber-400" />
-                Role:
+              ) : (
+                <User className="w-3.5 h-3.5 text-slate-300" />
+              )}
+              <span className={`text-xs font-bold ${isSuperAdmin ? 'text-amber-300' : 'text-slate-200'}`}>
+                {currentUser.username}
               </span>
-              <button
-                type="button"
-                onClick={() => onRoleChange('admin')}
-                className={`px-2.5 py-1 rounded transition font-semibold cursor-pointer ${currentRole === 'admin' ? 'bg-[#9f1239] text-white shadow' : 'text-slate-300 hover:text-white'}`}
-              >
-                Admin Ops
-              </button>
-              <button
-                type="button"
-                onClick={() => onRoleChange('finance')}
-                className={`px-2.5 py-1 rounded transition font-semibold cursor-pointer ${currentRole === 'finance' ? 'bg-[#9f1239] text-white shadow' : 'text-slate-300 hover:text-white'}`}
-              >
-                Owner / Finance
-              </button>
-              <button
-                type="button"
-                onClick={() => onRoleChange('viewer')}
-                className={`px-2.5 py-1 rounded transition font-semibold cursor-pointer ${currentRole === 'viewer' ? 'bg-[#9f1239] text-white shadow' : 'text-slate-300 hover:text-white'}`}
-              >
-                Viewer
-              </button>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                isSuperAdmin
+                  ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
+                  : 'bg-slate-700 text-slate-300'
+              }`}>
+                {isSuperAdmin ? 'SUPER ADMIN' : 'ADMIN'}
+              </span>
             </div>
 
-            {/* Supabase Status Pill */}
-            <button
-              onClick={onOpenSupabaseModal}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
-                isSupabaseConfigured
-                  ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/90'
-                  : 'bg-amber-950/80 border-amber-500/50 text-amber-300 hover:bg-amber-900/90'
-              }`}
-              title="Konfigurasi Database Supabase"
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">
-                {isSupabaseConfigured ? 'Supabase Live' : 'Database Setup'}
-              </span>
-            </button>
+            {/* Master Armada Button - Available for Both Roles */}
+            {onOpenVehicleModal && (
+              <button
+                onClick={onOpenVehicleModal}
+                className="flex items-center gap-1.5 bg-black/40 hover:bg-black/60 border border-rose-900/60 text-slate-200 px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
+                title="Kelola Master Armada Kendaraan & Supir"
+              >
+                <Truck className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline">Armada ({vehiclesCount})</span>
+              </button>
+            )}
 
-            {/* Master Armada Button */}
-            <button
-              onClick={onOpenVehicleModal}
-              className="flex items-center gap-1.5 bg-black/40 hover:bg-black/60 border border-rose-900/60 text-slate-200 px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
-            >
-              <Truck className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">Armada (6)</span>
-            </button>
+            {/* Master PT Tujuan Button - Available for Both Roles */}
+            {onOpenDestinationModal && (
+              <button
+                onClick={onOpenDestinationModal}
+                className="flex items-center gap-1.5 bg-black/40 hover:bg-black/60 border border-rose-900/60 text-slate-200 px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
+                title="Kelola Master PT / UD Tujuan Pengiriman & Alamat Bongkar"
+              >
+                <Building2 className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline">PT Tujuan ({destinationsCount})</span>
+              </button>
+            )}
 
-            {/* Export Excel Button */}
+            {/* Export Excel - Super Admin & Admin */}
             <button
               onClick={onExportExcel}
               className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-bold transition shadow-md cursor-pointer"
@@ -118,16 +112,24 @@ export function Navbar({
               <span className="hidden sm:inline">Export Excel</span>
             </button>
 
-            {/* Buat Surat Jalan Button */}
-            {currentRole !== 'viewer' && (
-              <button
-                onClick={onOpenCreateModal}
-                className="flex items-center gap-2 bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-4 py-2 rounded-lg text-xs sm:text-sm shadow-lg shadow-amber-900/30 transition cursor-pointer"
-              >
-                <PlusCircle className="w-4 h-4 text-slate-950" />
-                <span>+ Surat Jalan</span>
-              </button>
-            )}
+            {/* Buat Surat Jalan Button - Both Roles */}
+            <button
+              onClick={onOpenCreateModal}
+              className="flex items-center gap-2 bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-4 py-2 rounded-lg text-xs sm:text-sm shadow-lg shadow-amber-900/30 transition cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4 text-slate-950" />
+              <span>+ Surat Jalan</span>
+            </button>
+
+            {/* Logout Button */}
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-1.5 bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800/60 text-rose-300 hover:text-white px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
+              title="Keluar / Logout"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Keluar</span>
+            </button>
 
           </div>
 

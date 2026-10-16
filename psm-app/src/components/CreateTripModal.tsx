@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Vehicle, TripWithFinance } from '@/types';
-import { calculateFinance, formatRupiah, DataService } from '@/lib/data-service';
-import { X, Calculator, Truck, FileText, CheckCircle2, AlertTriangle, Flame, ShieldAlert, ArrowRight } from 'lucide-react';
+import { Vehicle, TripWithFinance, DestinationCustomer } from '@/types';
+import { calculateFinance, formatRupiah, DataService, getVehicleCapacity } from '@/lib/data-service';
+import { X, Calculator, Truck, FileText, CheckCircle2, AlertTriangle, Flame, ShieldAlert, ArrowRight, Building2 } from 'lucide-react';
 
 interface CreateTripModalProps {
   vehicles: Vehicle[];
+  destinations?: DestinationCustomer[];
   existingTrips: TripWithFinance[];
   editingTrip?: TripWithFinance | null;
+  userRole?: 'super_admin' | 'admin';
   onClose: () => void;
   onSaved: (trip: TripWithFinance) => void;
 }
@@ -74,11 +76,39 @@ function CurrencyInput({
 
 export function CreateTripModal({
   vehicles,
+  destinations = [],
   existingTrips,
   editingTrip,
+  userRole = 'super_admin',
   onClose,
   onSaved,
 }: CreateTripModalProps) {
+  const isSuperAdmin = userRole === 'super_admin';
+  // Destination Customers
+  const [destinationsList, setDestinationsList] = useState<DestinationCustomer[]>(destinations);
+  const [selectedDestId, setSelectedDestId] = useState<string>('');
+
+  useEffect(() => {
+    if (destinations && destinations.length > 0) {
+      setDestinationsList(destinations);
+    } else {
+      DataService.getDestinations().then(setDestinationsList);
+    }
+  }, [destinations]);
+
+  const handleDestinationSelect = (destId: string) => {
+    setSelectedDestId(destId);
+    if (!destId) return;
+    const found = destinationsList.find((d) => d.id === destId);
+    if (found) {
+      setShipTo(found.name);
+      setPortPointArea(found.address);
+      if (!soldTo) {
+        setSoldTo(found.name);
+      }
+    }
+  };
+
   // Trip Details State
   const [tripNumber, setTripNumber] = useState('');
   const [tripDate, setTripDate] = useState(new Date().toISOString().split('T')[0]);
@@ -108,13 +138,10 @@ export function CreateTripModal({
   const [grossRevenue, setGrossRevenue] = useState<number>(7500000);
   const [unitRate, setUnitRate] = useState<number>(1500);
 
-  // Cost items
-  const [fuelCost, setFuelCost] = useState<number>(2200000);
+  // Cost items — hanya 2 jenis biaya
   const [driverAllowance, setDriverAllowance] = useState<number>(1500000);
-  const [ferryTollCost, setFerryTollCost] = useState<number>(450000);
-  const [retributionSealCost, setRetributionSealCost] = useState<number>(100000);
   const [otherCosts, setOtherCosts] = useState<number>(50000);
-  const [otherCostsNotes, setOtherCostsNotes] = useState<string>('Retribusi jembatan timbang');
+  const [otherCostsNotes, setOtherCostsNotes] = useState<string>('');
 
   // Loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,36 +149,50 @@ export function CreateTripModal({
   // Initialize fields on open
   useEffect(() => {
     if (editingTrip) {
-      setTripNumber(editingTrip.trip_number);
-      setTripDate(editingTrip.trip_date);
-      setSelectedVehicleId(editingTrip.vehicle_id || '');
-      setPlateNumber(editingTrip.plate_number);
-      setDriverName(editingTrip.driver_name);
+      setTripNumber(editingTrip.trip_number || '');
+      setTripDate(editingTrip.trip_date || new Date().toISOString().split('T')[0]);
+      
+      // Auto-match vehicle
+      let vId = editingTrip.vehicle_id || '';
+      if (!vId && editingTrip.plate_number) {
+        const foundVeh = vehicles.find(
+          (v) => v.plate_number.replace(/\s+/g, '') === editingTrip.plate_number.replace(/\s+/g, '')
+        );
+        if (foundVeh) vId = foundVeh.id;
+      }
+      setSelectedVehicleId(vId);
+
+      setPlateNumber(editingTrip.plate_number || '');
+      setDriverName(editingTrip.driver_name || '');
       setDriverPhone(editingTrip.driver_phone || '');
       setSoldTo(editingTrip.sold_to || '');
-      setShipTo(editingTrip.ship_to);
-      setPortPointArea(editingTrip.port_point_area);
-      setSealNumber(editingTrip.seal_number);
-      setLoadingLocation(editingTrip.loading_location);
-      setDeliveryBy(editingTrip.delivery_by);
-      setQuantityDisplay(editingTrip.quantity_display);
-      setGoodsType(editingTrip.goods_type);
+      setShipTo(editingTrip.ship_to || '');
+      setPortPointArea(editingTrip.port_point_area || '');
+      setSealNumber(editingTrip.seal_number || '');
+      const normLoc = (editingTrip.loading_location || '').toUpperCase().includes('GLOBAL') ? 'GLOBAL' : 'SADP';
+      setLoadingLocation(normLoc);
+      setDeliveryBy(editingTrip.delivery_by || 'PT. PUTRA SAIJAAN MANDIRI');
+      setQuantityDisplay(editingTrip.quantity_display || '5000 L');
+      setGoodsType(editingTrip.goods_type || 'BIOSOLAR(B50)');
       setChargingTime(editingTrip.charging_time || 'S/D');
       setCargoCondition(editingTrip.cargo_condition || 'BAIK DAN CUKUP');
       setNotes(editingTrip.notes || '');
-      setStatus(editingTrip.status as any);
+      setStatus((editingTrip.status as any) || 'in_transit');
 
-      // Finances
+      // Auto-match destination dropdown
+      const destMatch = destinationsList.find(
+        (d) => d.name.trim().toUpperCase() === (editingTrip.ship_to || '').trim().toUpperCase()
+      );
+      setSelectedDestId(destMatch ? destMatch.id : '');
+
+      // Finances (Safe fallback)
       const fin = editingTrip.finance;
-      setRevenueType(fin.revenue_type);
-      setGrossRevenue(fin.gross_revenue);
-      setUnitRate(fin.unit_rate || 0);
-      setFuelCost(fin.fuel_cost);
-      setDriverAllowance(fin.driver_allowance);
-      setFerryTollCost(fin.ferry_toll_cost);
-      setRetributionSealCost(fin.retribution_seal_cost);
-      setOtherCosts(fin.other_costs);
-      setOtherCostsNotes(fin.other_costs_notes || '');
+      setRevenueType(fin?.revenue_type || 'flat_rate');
+      setGrossRevenue(fin?.gross_revenue ?? 7500000);
+      setUnitRate(fin?.unit_rate ?? 0);
+      setDriverAllowance(fin?.driver_allowance ?? 1500000);
+      setOtherCosts(fin?.other_costs ?? 50000);
+      setOtherCostsNotes(fin?.other_costs_notes || '');
     } else {
       // Auto-generate next trip number
       const nextNum = DataService.generateNextTripNumber(existingTrips);
@@ -163,11 +204,12 @@ export function CreateTripModal({
         setSelectedVehicleId(defaultVeh.id);
         setPlateNumber(defaultVeh.plate_number);
         setDriverName(defaultVeh.default_driver_name);
+        setQuantityDisplay(getVehicleCapacity(defaultVeh));
       }
     }
-  }, [editingTrip, existingTrips, vehicles]);
+  }, [editingTrip, destinationsList]);
 
-  // Handle vehicle selection change: ONLY updates Plate Number and Driver Name!
+  // Handle vehicle selection change: updates Plate, Driver, and auto-adjusts Quantity to Vehicle Capacity
   const handleVehicleChange = (vehicleId: string) => {
     setSelectedVehicleId(vehicleId);
     const found = vehicles.find((v) => v.id === vehicleId);
@@ -177,7 +219,9 @@ export function CreateTripModal({
       if (found.default_driver_phone) {
         setDriverPhone(found.default_driver_phone);
       }
-      // Note: Quantity & Cargo type remain fully manual as instructed
+      // Otomatis menyesuaikan QUANTITY / JUMLAH MUATAN sesuai armada yang dipilih (5000 L / 10.000 L)
+      const capacity = getVehicleCapacity(found);
+      setQuantityDisplay(capacity);
     }
   };
 
@@ -187,10 +231,7 @@ export function CreateTripModal({
     grossRevenue,
     unitRate,
     quantityDisplay,
-    fuelCost,
     driverAllowance,
-    ferryTollCost,
-    retributionSealCost,
     otherCosts
   );
 
@@ -225,20 +266,29 @@ export function CreateTripModal({
         status: status,
       };
 
-      const financeData = {
-        revenue_type: revenueType,
-        unit_rate: revenueType === 'per_unit' ? unitRate : 0,
-        gross_revenue: finCalc.calculatedRevenue,
-        fuel_cost: fuelCost,
-        driver_allowance: driverAllowance,
-        ferry_toll_cost: ferryTollCost,
-        retribution_seal_cost: retributionSealCost,
-        other_costs: otherCosts,
-        other_costs_notes: otherCostsNotes,
-        total_operational_cost: finCalc.totalCost,
-        net_margin: finCalc.netMargin,
-        margin_percentage: finCalc.marginPercentage,
-      };
+      const financeData = (!isSuperAdmin && editingTrip?.finance)
+        ? {
+            revenue_type: editingTrip.finance.revenue_type,
+            unit_rate: editingTrip.finance.unit_rate || 0,
+            gross_revenue: editingTrip.finance.gross_revenue,
+            driver_allowance: editingTrip.finance.driver_allowance,
+            other_costs: editingTrip.finance.other_costs,
+            other_costs_notes: editingTrip.finance.other_costs_notes,
+            total_operational_cost: editingTrip.finance.total_operational_cost,
+            net_margin: editingTrip.finance.net_margin,
+            margin_percentage: editingTrip.finance.margin_percentage,
+          }
+        : {
+            revenue_type: revenueType,
+            unit_rate: revenueType === 'per_unit' ? unitRate : 0,
+            gross_revenue: finCalc.calculatedRevenue,
+            driver_allowance: driverAllowance,
+            other_costs: otherCosts,
+            other_costs_notes: otherCostsNotes,
+            total_operational_cost: finCalc.totalCost,
+            net_margin: finCalc.netMargin,
+            margin_percentage: finCalc.marginPercentage,
+          };
 
       let result: TripWithFinance | null = null;
       if (editingTrip) {
@@ -261,7 +311,7 @@ export function CreateTripModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-2 md:p-6 overflow-y-auto">
-      <div className="bg-slate-900 border border-rose-900/40 text-slate-100 rounded-xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div className={`bg-slate-900 border border-rose-900/40 text-slate-100 rounded-xl shadow-2xl w-full ${isSuperAdmin ? 'max-w-6xl' : 'max-w-3xl'} max-h-[92vh] flex flex-col overflow-hidden`}>
         
         {/* Header Modal - Merah Hati theme */}
         <div className="bg-linear-to-r from-[#4c0519] via-[#881337] to-[#700c1e] px-6 py-4 flex items-center justify-between border-b border-rose-900/60 shrink-0">
@@ -271,7 +321,9 @@ export function CreateTripModal({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white tracking-wide">
-                {editingTrip ? 'Edit Surat Jalan & Perhitungan Margin' : 'Buat Surat Jalan & Hitung Margin Real-Time'}
+                {isSuperAdmin
+                  ? (editingTrip ? 'Edit Surat Jalan & Perhitungan Margin' : 'Buat Surat Jalan & Hitung Margin Real-Time')
+                  : (editingTrip ? 'Edit Surat Jalan BBM' : 'Buat Surat Jalan BBM Baru')}
               </h2>
               <p className="text-xs text-rose-200">
                 PT. Putra Saijaan Mandiri • Armada Tangki BBM & Cargo
@@ -292,13 +344,16 @@ export function CreateTripModal({
           </div>
         </div>
 
-        {/* Modal Body: 2 Columns (Left: Trip Details, Right: Live Margin Calculator) */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Modal Form with Scrollable Content and Sticky Footer */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+          
+          {/* Scrollable Form Body: 2 Columns for Super Admin, 1 Column for Admin */}
+          <div className={`flex-1 overflow-y-auto p-6 ${isSuperAdmin ? 'grid grid-cols-1 lg:grid-cols-12 gap-6' : 'flex flex-col space-y-5'}`}>
           
           {/* ======================================================= */}
-          {/* LEFT COLUMN: INFORMASI SURAT JALAN & RUTE (7 Cols)      */}
+          {/* LEFT COLUMN: INFORMASI SURAT JALAN & RUTE               */}
           {/* ======================================================= */}
-          <div className="lg:col-span-7 space-y-5">
+          <div className={`${isSuperAdmin ? 'lg:col-span-7' : 'w-full'} space-y-5`}>
             
             {/* Box 1: Armada & Supir */}
             <div className="bg-slate-800/80 border border-slate-700/80 rounded-lg p-4">
@@ -318,11 +373,14 @@ export function CreateTripModal({
                     className="w-full bg-slate-900 border border-rose-900/50 focus:border-rose-500 rounded-md px-3 py-2 text-sm text-white focus:outline-none"
                   >
                     <option value="">-- Pilih Armada --</option>
-                    {vehicles.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.plate_number} — Supir: {v.default_driver_name} ({v.notes || v.vehicle_type})
-                      </option>
-                    ))}
+                    {vehicles.map((v) => {
+                      const cap = getVehicleCapacity(v);
+                      return (
+                        <option key={v.id} value={v.id}>
+                          {v.plate_number} — Supir: {v.default_driver_name} (Kapasitas {cap})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -389,12 +447,12 @@ export function CreateTripModal({
                     type="text"
                     value={quantityDisplay}
                     onChange={(e) => setQuantityDisplay(e.target.value)}
-                    placeholder="Contoh: 5000 L atau 10000 L"
+                    placeholder="Contoh: 5000 L atau 10.000 L"
                     required
                     className="w-full bg-slate-900 border border-amber-500/50 focus:border-amber-400 rounded-md px-3 py-2 text-sm text-amber-300 font-bold"
                   />
                   <span className="text-[10px] text-slate-400 mt-0.5 block">
-                    Ketik manual sesuai kapasitas aktual (cth: 5000 L, 10000 L, 25 Ton)
+                    Ketik manual sesuai kapasitas aktual (cth: 5000 L, 10.000 L, 25 Ton)
                   </span>
                 </div>
 
@@ -481,14 +539,15 @@ export function CreateTripModal({
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
                     LOADING (Depot / Lokasi Muat) *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={loadingLocation}
                     onChange={(e) => setLoadingLocation(e.target.value)}
-                    placeholder="Contoh: SADP atau Depot Kotabaru"
                     required
-                    className="w-full bg-slate-900 border border-slate-700 rounded-md px-3 py-2 text-sm text-white font-semibold"
-                  />
+                    className="w-full bg-slate-900 border border-slate-700 rounded-md px-3 py-2 text-sm text-white font-bold cursor-pointer focus:border-rose-500 focus:outline-none"
+                  >
+                    <option value="SADP">SADP</option>
+                    <option value="GLOBAL">GLOBAL</option>
+                  </select>
                 </div>
 
                 <div>
@@ -503,6 +562,34 @@ export function CreateTripModal({
                     className="w-full bg-slate-900 border border-slate-700 rounded-md px-3 py-2 text-sm text-white"
                   />
                 </div>
+              </div>
+
+              {/* Quick Select PT / UD Tujuan (Auto-fill) */}
+              <div className="bg-slate-950/80 border border-amber-500/50 rounded-lg p-3 space-y-1.5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-amber-400" />
+                    PILIH PT / UD TUJUAN (AUTO-FILL ALAMAT)
+                  </label>
+                  <span className="text-[10px] text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded font-semibold border border-amber-500/30">
+                    Otomatis Isi Alamat
+                  </span>
+                </div>
+                <select
+                  value={selectedDestId}
+                  onChange={(e) => handleDestinationSelect(e.target.value)}
+                  className="w-full bg-slate-900 border border-amber-500/60 focus:border-amber-400 rounded-md px-3 py-2 text-sm text-white font-bold cursor-pointer focus:outline-none"
+                >
+                  <option value="">-- Pilih PT / UD Tujuan Terdaftar ({destinationsList.length}) --</option>
+                  {destinationsList.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} — {d.address}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-slate-400">
+                  Pilih dari daftar rekanan di atas agar nama PT dan alamat bongkar di bawah terisi otomatis.
+                </p>
               </div>
 
               <div>
@@ -566,9 +653,10 @@ export function CreateTripModal({
           </div>
 
           {/* ======================================================= */}
-          {/* RIGHT COLUMN: LIVE MARGIN CALCULATOR (5 Cols)           */}
+          {/* RIGHT COLUMN: LIVE MARGIN CALCULATOR (Super Admin Only) */}
           {/* ======================================================= */}
-          <div className="lg:col-span-5 space-y-4">
+          {isSuperAdmin && (
+            <div className="lg:col-span-5 space-y-4">
             
             <div className="bg-linear-to-b from-slate-800 to-slate-900 border border-rose-900/60 rounded-xl p-5 shadow-lg relative overflow-hidden">
               <div className="flex items-center gap-2 mb-4 text-rose-300 font-bold border-b border-rose-900/40 pb-3">
@@ -637,7 +725,7 @@ export function CreateTripModal({
                 )}
               </div>
 
-              {/* 2. Biaya Operasional (Operational Costs) */}
+              {/* 2. Biaya Operasional (Hanya 2 item) */}
               <div className="space-y-3 mb-5 border-t border-slate-700/60 pt-4">
                 <span className="text-xs font-bold text-slate-300 block uppercase">
                   Rincian Biaya Operasional Jalan
@@ -645,19 +733,7 @@ export function CreateTripModal({
 
                 <div>
                   <div className="flex justify-between text-[11px] text-slate-300 mb-1">
-                    <span>1. Biaya BBM / Solar</span>
-                    <span className="text-slate-400">Solar Truk Tangki</span>
-                  </div>
-                  <CurrencyInput
-                    value={fuelCost}
-                    onChange={setFuelCost}
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-[11px] text-slate-300 mb-1">
-                    <span>2. Uang Jalan / Saku Supir</span>
+                    <span>1. Uang Jalan / Saku Supir</span>
                     <span className="text-slate-400">Honor Pengemudi</span>
                   </div>
                   <CurrencyInput
@@ -669,32 +745,8 @@ export function CreateTripModal({
 
                 <div>
                   <div className="flex justify-between text-[11px] text-slate-300 mb-1">
-                    <span>3. Tiket Ferry & Tol</span>
-                    <span className="text-slate-400">Penyeberangan Batulicin/Tol</span>
-                  </div>
-                  <CurrencyInput
-                    value={ferryTollCost}
-                    onChange={setFerryTollCost}
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-[11px] text-slate-300 mb-1">
-                    <span>4. Segel & Retribusi</span>
-                    <span className="text-slate-400">Segel Tangki & Timbangan</span>
-                  </div>
-                  <CurrencyInput
-                    value={retributionSealCost}
-                    onChange={setRetributionSealCost}
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-[11px] text-slate-300 mb-1">
-                    <span>5. Biaya Lain-lain</span>
-                    <span className="text-slate-400">Bongkar/Kawal dsb</span>
+                    <span>2. Biaya Lain-lain</span>
+                    <span className="text-slate-400">Bongkar/Kawal/dsb</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <CurrencyInput
@@ -712,6 +764,7 @@ export function CreateTripModal({
                   </div>
                 </div>
               </div>
+
 
               {/* 3. HASIL LIVE REAL-TIME CALCULATION */}
               <div className="bg-slate-950 rounded-xl p-4 border border-rose-900/60 space-y-3">
@@ -761,31 +814,50 @@ export function CreateTripModal({
 
             </div>
 
-            {/* Tombol Aksi Simpan */}
-            <div className="pt-2 flex items-center gap-3">
+          </div>
+          )}
+
+          </div>
+
+          {/* Sticky Modal Footer for Both Roles */}
+          <div className="px-6 py-4 bg-slate-950 border-t border-slate-800/80 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              {editingTrip ? (
+                <span>Mode: <strong className="text-amber-400 font-mono">Edit Surat Jalan ({editingTrip.trip_number})</strong></span>
+              ) : (
+                <span className="text-emerald-400 font-medium">● Buat Dokumen Surat Jalan Baru</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3 rounded-lg text-sm transition"
+                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-sm transition cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-2/3 bg-linear-to-r from-[#881337] to-[#be123c] hover:from-[#9f1239] hover:to-[#e11d48] text-white font-bold py-3 rounded-lg text-sm shadow-lg shadow-rose-950/40 flex items-center justify-center gap-2 transition cursor-pointer"
+                className="px-6 py-2.5 bg-linear-to-r from-[#881337] to-[#be123c] hover:from-[#9f1239] hover:to-[#e11d48] text-white font-bold rounded-xl text-sm shadow-lg shadow-rose-950/40 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <span>Menyimpan...</span>
                 ) : (
                   <>
-                    <span>Simpan Surat Jalan & Margin</span>
+                    <span>
+                      {editingTrip
+                        ? 'Simpan Perubahan Surat Jalan'
+                        : isSuperAdmin
+                        ? 'Simpan Surat Jalan & Margin'
+                        : 'Simpan Surat Jalan'}
+                    </span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
             </div>
-
           </div>
 
         </form>

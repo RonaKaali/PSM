@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Vehicle, TripWithFinance } from '@/types';
+import { Vehicle, TripWithFinance, DestinationCustomer } from '@/types';
 import { DataService, formatRupiah } from '@/lib/data-service';
 import { exportTripsToExcel } from '@/lib/excel-export';
 import { Navbar } from '@/components/Navbar';
@@ -9,11 +9,11 @@ import { DashboardStats } from '@/components/DashboardStats';
 import { CreateTripModal } from '@/components/CreateTripModal';
 import { SuratJalanPrint } from '@/components/SuratJalanPrint';
 import { VehicleManagerModal } from '@/components/VehicleManagerModal';
-import { SupabaseConfigModal } from '@/components/SupabaseConfigModal';
-import { PSMLogo } from '@/components/PSMLogo';
+import { DestinationManagerModal } from '@/components/DestinationManagerModal';
+import { ExportExcelModal } from '@/components/ExportExcelModal';
+import { LoginPage, AuthUser, UserRole } from '@/components/LoginPage';
 import {
   Search,
-  Filter,
   Printer,
   Edit3,
   Trash2,
@@ -23,25 +23,24 @@ import {
   FileText,
   DollarSign,
   TrendingUp,
-  MapPin,
-  Calendar,
-  Layers,
   CheckCircle,
   Clock,
-  ExternalLink,
-  ChevronRight,
-  Flame,
+  LogOut,
+  Shield,
+  User,
+  Building2,
 } from 'lucide-react';
 
 export default function HomePage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [destinations, setDestinations] = useState<DestinationCustomer[]>([]);
   const [trips, setTrips] = useState<TripWithFinance[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Active Role
-  const [userRole, setUserRole] = useState<'admin' | 'finance' | 'viewer'>('finance');
+  // Auth State
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
-  // Active Tab
+  // Active Tab (super_admin sees all 3, admin only trips)
   const [activeTab, setActiveTab] = useState<'trips' | 'margins' | 'fleet'>('trips');
 
   // Search & Filter State
@@ -54,19 +53,23 @@ export default function HomePage() {
   const [editingTrip, setEditingTrip] = useState<TripWithFinance | null>(null);
   const [printingTrip, setPrintingTrip] = useState<TripWithFinance | null>(null);
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
-  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
+  const [isDestinationModalOpen, setIsDestinationModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  // Load Initial Data
+  // Load Initial Data after login
   useEffect(() => {
+    if (!currentUser) return;
     async function initData() {
       setLoading(true);
       try {
-        const [vehs, trps] = await Promise.all([
+        const [vehs, trps, dests] = await Promise.all([
           DataService.getVehicles(),
           DataService.getTrips(),
+          DataService.getDestinations(),
         ]);
         setVehicles(vehs);
         setTrips(trps);
+        setDestinations(dests);
       } catch (err) {
         console.error('Error loading data:', err);
       } finally {
@@ -74,7 +77,7 @@ export default function HomePage() {
       }
     }
     initData();
-  }, []);
+  }, [currentUser]);
 
   // Filtered Trips
   const filteredTrips = trips.filter((t) => {
@@ -95,6 +98,17 @@ export default function HomePage() {
   });
 
   // Handlers
+  const handleLogin = (user: AuthUser) => {
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setTrips([]);
+    setVehicles([]);
+    setActiveTab('trips');
+  };
+
   const handleOpenCreate = () => {
     setEditingTrip(null);
     setIsCreateModalOpen(true);
@@ -122,36 +136,47 @@ export default function HomePage() {
       }
       return [savedTrip, ...prev];
     });
+    setEditingTrip(null);
+    setIsCreateModalOpen(false);
   };
 
   const handleExportExcel = () => {
-    exportTripsToExcel(filteredTrips);
+    setIsExportModalOpen(true);
   };
+
+  // Show login page if not authenticated
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  const isSuperAdmin = currentUser.role === 'super_admin';
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       
-      {/* 1. Navbar - Merah Hati Official Header */}
+      {/* 1. Navbar */}
       <Navbar
-        currentRole={userRole}
-        onRoleChange={setUserRole}
         onOpenCreateModal={handleOpenCreate}
         onOpenVehicleModal={() => setIsVehicleModalOpen(true)}
-        onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
+        onOpenDestinationModal={() => setIsDestinationModalOpen(true)}
+        vehiclesCount={vehicles.length}
+        destinationsCount={destinations.length}
         onExportExcel={handleExportExcel}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* 2. Main Content Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {/* KPI Dashboard Cards */}
-        <DashboardStats trips={trips} userRole={userRole} />
+        {/* KPI Dashboard Cards - Admin only sees ritase, Super Admin sees all */}
+        <DashboardStats trips={trips} userRole={currentUser.role} />
 
         {/* 3. Control Header: Tabs & Filters */}
         <div className="bg-slate-900/90 border border-rose-900/40 rounded-xl p-4 shadow-xl mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             
-            {/* View Tabs */}
+            {/* View Tabs - Admin only sees Daftar Surat Jalan */}
             <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-lg border border-slate-800">
               <button
                 onClick={() => setActiveTab('trips')}
@@ -165,36 +190,51 @@ export default function HomePage() {
                 <span>Daftar Surat Jalan ({trips.length})</span>
               </button>
 
-              <button
-                onClick={() => setActiveTab('margins')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${
-                  activeTab === 'margins'
-                    ? 'bg-[#881337] text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <DollarSign className="w-4 h-4" />
-                <span>Kalkulator & Laba Margin</span>
-              </button>
+              {/* Only Super Admin can access Margin & Fleet tabs */}
+              {isSuperAdmin && (
+                <>
+                  <button
+                    onClick={() => setActiveTab('margins')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${
+                      activeTab === 'margins'
+                        ? 'bg-[#881337] text-white shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    <span>Kalkulator &amp; Laba Margin</span>
+                  </button>
 
-              <button
-                onClick={() => setActiveTab('fleet')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${
-                  activeTab === 'fleet'
-                    ? 'bg-[#881337] text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Truck className="w-4 h-4" />
-                <span>Performa 6 Armada</span>
-              </button>
+                  <button
+                    onClick={() => setActiveTab('fleet')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${
+                      activeTab === 'fleet'
+                        ? 'bg-[#881337] text-white shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Truck className="w-4 h-4" />
+                    <span>Performa 6 Armada</span>
+                  </button>
+                </>
+              )}
             </div>
 
-            {/* Quick Action Button for Mobile / Secondary */}
+            {/* Quick Actions */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsDestinationModalOpen(true)}
+                className="flex items-center gap-1.5 bg-slate-950 hover:bg-slate-800 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shadow-sm"
+                title="Kelola Master PT / UD Tujuan Pengiriman & Alamat Bongkar"
+              >
+                <Building2 className="w-4 h-4 text-amber-400" />
+                <span>PT Tujuan ({destinations.length})</span>
+              </button>
+
               <button
                 onClick={handleExportExcel}
                 className="flex items-center gap-1.5 bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 border border-emerald-600/60 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer"
+                title="Download Rekap Surat Jalan ke Excel (.xlsx)"
               >
                 <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
                 <span>Download Rekap Excel</span>
@@ -254,22 +294,20 @@ export default function HomePage() {
             <div className="px-6 py-4 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-white text-sm">
-                  Daftar Surat Jalan BBM & Muatan
+                  Daftar Surat Jalan BBM &amp; Muatan
                 </h3>
                 <p className="text-xs text-slate-400">
                   Total {filteredTrips.length} surat jalan ditemukan
                 </p>
               </div>
 
-              {userRole !== 'viewer' && (
-                <button
-                  onClick={handleOpenCreate}
-                  className="bg-[#881337] hover:bg-[#9f1239] text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
-                >
-                  <PlusCircle className="w-3.5 h-3.5" />
-                  <span>Buat Surat Jalan</span>
-                </button>
-              )}
+              <button
+                onClick={handleOpenCreate}
+                className="bg-[#881337] hover:bg-[#9f1239] text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Buat Surat Jalan</span>
+              </button>
             </div>
 
             <div className="overflow-x-auto">
@@ -278,8 +316,8 @@ export default function HomePage() {
                   <tr>
                     <th className="py-3 px-4">No. Surat Jalan</th>
                     <th className="py-3 px-4">Tanggal</th>
-                    <th className="py-3 px-4">Armada & Supir</th>
-                    <th className="py-3 px-4">Tujuan (Ship To) & Lokasi</th>
+                    <th className="py-3 px-4">Armada &amp; Supir</th>
+                    <th className="py-3 px-4">Tujuan (Ship To) &amp; Lokasi</th>
                     <th className="py-3 px-4">No. Segel</th>
                     <th className="py-3 px-4">Muatan (Manual)</th>
                     <th className="py-3 px-4">Status</th>
@@ -366,7 +404,7 @@ export default function HomePage() {
                         {/* Aksi */}
                         <td className="py-3.5 px-4 text-center">
                           <div className="flex items-center justify-center gap-1.5">
-                            {/* Tombol Cetak Dokumen 1:1 Sesuai Fisik */}
+                            {/* Tombol Cetak */}
                             <button
                               onClick={() => setPrintingTrip(trip)}
                               className="bg-amber-500/90 hover:bg-amber-400 text-slate-950 font-bold px-2.5 py-1.5 rounded flex items-center gap-1 transition shadow cursor-pointer text-xs"
@@ -376,23 +414,23 @@ export default function HomePage() {
                               <span>Cetak 1:1</span>
                             </button>
 
-                            {userRole !== 'viewer' && (
-                              <>
-                                <button
-                                  onClick={() => handleEditTrip(trip)}
-                                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded transition cursor-pointer"
-                                  title="Edit Surat Jalan & Biaya"
-                                >
-                                  <Edit3 className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteTrip(trip.id, trip.trip_number)}
-                                  className="p-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 rounded transition cursor-pointer"
-                                  title="Hapus Surat Jalan"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </>
+                            {/* Edit & Delete - both roles can edit, only super_admin can delete */}
+                            <button
+                              onClick={() => handleEditTrip(trip)}
+                              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded transition cursor-pointer"
+                              title="Edit Surat Jalan"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => handleDeleteTrip(trip.id, trip.trip_number)}
+                                className="p-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 rounded transition cursor-pointer"
+                                title="Hapus Surat Jalan"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
                             )}
                           </div>
                         </td>
@@ -407,17 +445,17 @@ export default function HomePage() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 2: ANALISIS MARGIN & BIAYA PERJALANAN (FINANSIAL)    */}
+        {/* TAB 2: ANALISIS MARGIN & BIAYA (SUPER ADMIN ONLY)        */}
         {/* ========================================================= */}
-        {activeTab === 'margins' && (
+        {activeTab === 'margins' && isSuperAdmin && (
           <div className="bg-slate-900/90 border border-rose-900/40 rounded-xl overflow-hidden shadow-2xl">
             <div className="px-6 py-4 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-white text-sm">
-                  Rekapitulasi Keuangan & Margin Laba Per Perjalanan
+                  Rekapitulasi Keuangan &amp; Margin Laba Per Perjalanan
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Perhitungan otomatis: Pendapatan Kotor - (Solar + Uang Supir + Ferry/Tol + Segel + Lainnya)
+                  Pendapatan - (Uang Jalan + Biaya Lain-lain)
                 </p>
               </div>
             </div>
@@ -429,10 +467,8 @@ export default function HomePage() {
                     <th className="py-3 px-4">Surat Jalan</th>
                     <th className="py-3 px-4">Nopol / Supir</th>
                     <th className="py-3 px-4 text-right">Pendapatan Kotor</th>
-                    <th className="py-3 px-4 text-right">Solar (BBM)</th>
                     <th className="py-3 px-4 text-right">Uang Supir</th>
-                    <th className="py-3 px-4 text-right">Ferry & Tol</th>
-                    <th className="py-3 px-4 text-right">Segel/Retribusi</th>
+                    <th className="py-3 px-4 text-right">Biaya Lain-lain</th>
                     <th className="py-3 px-4 text-right">Total Biaya</th>
                     <th className="py-3 px-4 text-right">Laba Bersih</th>
                     <th className="py-3 px-4 text-center">Margin %</th>
@@ -448,54 +484,36 @@ export default function HomePage() {
                     return (
                       <tr key={trip.id} className="hover:bg-slate-800/40 transition">
                         
-                        {/* No. SJ & Tanggal */}
                         <td className="py-3.5 px-4 font-mono font-bold text-amber-300">
                           <div>{trip.trip_number}</div>
                           <div className="text-[10px] text-slate-500 font-sans">{trip.trip_date}</div>
                         </td>
 
-                        {/* Nopol & Supir */}
                         <td className="py-3.5 px-4">
                           <span className="font-bold text-white font-mono">{trip.plate_number}</span>
                           <span className="text-[11px] text-slate-400 block">{trip.driver_name}</span>
                         </td>
 
-                        {/* Pendapatan */}
                         <td className="py-3.5 px-4 text-right font-bold text-emerald-300">
                           {formatRupiah(fin?.gross_revenue || 0)}
                         </td>
 
-                        {/* Solar */}
-                        <td className="py-3.5 px-4 text-right text-rose-300">
-                          {formatRupiah(fin?.fuel_cost || 0)}
-                        </td>
-
-                        {/* Uang Supir */}
                         <td className="py-3.5 px-4 text-right text-slate-300">
                           {formatRupiah(fin?.driver_allowance || 0)}
                         </td>
 
-                        {/* Ferry & Tol */}
                         <td className="py-3.5 px-4 text-right text-slate-300">
-                          {formatRupiah(fin?.ferry_toll_cost || 0)}
+                          {formatRupiah(fin?.other_costs || 0)}
                         </td>
 
-                        {/* Segel & Retribusi */}
-                        <td className="py-3.5 px-4 text-right text-slate-300">
-                          {formatRupiah(fin?.retribution_seal_cost || 0)}
-                        </td>
-
-                        {/* Total Biaya */}
                         <td className="py-3.5 px-4 text-right font-bold text-rose-400">
                           {formatRupiah(fin?.total_operational_cost || 0)}
                         </td>
 
-                        {/* Laba Bersih (Net Margin) */}
                         <td className={`py-3.5 px-4 text-right font-black text-sm ${(fin?.net_margin || 0) >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                           {formatRupiah(fin?.net_margin || 0)}
                         </td>
 
-                        {/* Margin % */}
                         <td className="py-3.5 px-4 text-center">
                           <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-black ${
                             isHealthy
@@ -518,9 +536,9 @@ export default function HomePage() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 3: PERFORMA & ANALISIS 6 ARMADA BAWAAN PT. PSM       */}
+        {/* TAB 3: PERFORMA 6 ARMADA (SUPER ADMIN ONLY)              */}
         {/* ========================================================= */}
-        {activeTab === 'fleet' && (
+        {activeTab === 'fleet' && isSuperAdmin && (
           <div className="space-y-6">
             <div className="bg-slate-900/90 border border-rose-900/40 rounded-xl p-6 shadow-2xl">
               <h3 className="text-base font-bold text-white mb-2 flex items-center gap-2">
@@ -528,7 +546,7 @@ export default function HomePage() {
                 <span>Analisis Profitabilitas 6 Armada Truk PT. Putra Saijaan Mandiri</span>
               </h3>
               <p className="text-xs text-slate-400 mb-6">
-                Evaluasi performa ritase, efisiensi solar, dan total laba yang dihasilkan per nomor polisi:
+                Evaluasi performa ritase, efisiensi, dan total laba yang dihasilkan per nomor polisi:
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -611,7 +629,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="text-slate-400 text-center sm:text-right">
-            <span>Sistem Surat Jalan BBM & Margin Calculator Truk Tangki</span>
+            <span>Sistem Surat Jalan BBM &amp; Margin Calculator Truk Tangki</span>
           </div>
         </div>
       </footer>
@@ -622,9 +640,14 @@ export default function HomePage() {
       {isCreateModalOpen && (
         <CreateTripModal
           vehicles={vehicles}
+          destinations={destinations}
           existingTrips={trips}
           editingTrip={editingTrip}
-          onClose={() => setIsCreateModalOpen(false)}
+          userRole={currentUser.role}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setEditingTrip(null);
+          }}
           onSaved={handleTripSaved}
         />
       )}
@@ -637,7 +660,7 @@ export default function HomePage() {
         />
       )}
 
-      {/* Vehicle Manager Modal */}
+      {/* Vehicle Manager Modal - Available for Both Roles */}
       {isVehicleModalOpen && (
         <VehicleManagerModal
           vehicles={vehicles}
@@ -646,10 +669,21 @@ export default function HomePage() {
         />
       )}
 
-      {/* Supabase Connection Setup Modal */}
-      {isSupabaseModalOpen && (
-        <SupabaseConfigModal
-          onClose={() => setIsSupabaseModalOpen(false)}
+      {/* Destination Manager Modal - Both Roles */}
+      {isDestinationModalOpen && (
+        <DestinationManagerModal
+          destinations={destinations}
+          onClose={() => setIsDestinationModalOpen(false)}
+          onDestinationsUpdated={(updated) => setDestinations(updated)}
+        />
+      )}
+
+      {/* Export Excel Modal with 3, 7, 30 days & custom filter */}
+      {isExportModalOpen && (
+        <ExportExcelModal
+          trips={trips}
+          userRole={currentUser.role}
+          onClose={() => setIsExportModalOpen(false)}
         />
       )}
 

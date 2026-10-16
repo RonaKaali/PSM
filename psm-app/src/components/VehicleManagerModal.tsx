@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Vehicle } from '@/types';
-import { DataService } from '@/lib/data-service';
+import { DataService, getVehicleCapacity } from '@/lib/data-service';
 import { X, Truck, Plus, Check, Shield } from 'lucide-react';
 
 interface VehicleManagerModalProps {
@@ -20,7 +20,7 @@ export function VehicleManagerModal({
   const [newPlate, setNewPlate] = useState('');
   const [newDriver, setNewDriver] = useState('');
   const [newType, setNewType] = useState('Truk Tangki BBM');
-  const [newNotes, setNewNotes] = useState('Armada 10 KL');
+  const [newNotes, setNewNotes] = useState('Kapasitas 10.000 L');
   const [newPhone, setNewPhone] = useState('');
 
   const handleAddVehicle = async (e: React.FormEvent) => {
@@ -138,7 +138,7 @@ export function VehicleManagerModal({
                     type="text"
                     value={newNotes}
                     onChange={(e) => setNewNotes(e.target.value)}
-                    placeholder="Contoh: Armada 10 KL atau 5 KL"
+                    placeholder="Contoh: Kapasitas 10.000 L atau 5000 L"
                     className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-white"
                   />
                 </div>
@@ -185,7 +185,7 @@ export function VehicleManagerModal({
                       {v.default_driver_name}
                     </td>
                     <td className="py-3 px-4 text-slate-300">
-                      {v.vehicle_type} ({v.notes || '-'})
+                      Truk Tangki BBM ({getVehicleCapacity(v)})
                     </td>
                     <td className="py-3 px-4">
                       <span className="inline-flex items-center gap-1 bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded text-[11px] font-bold">

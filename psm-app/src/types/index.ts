@@ -40,11 +40,8 @@ export interface TripFinance {
   revenue_type: 'flat_rate' | 'per_unit';
   unit_rate: number;
   gross_revenue: number;
-  fuel_cost: number;
-  driver_allowance: number;
-  ferry_toll_cost: number;
-  retribution_seal_cost: number;
-  other_costs: number;
+  driver_allowance: number;   // Uang Jalan / Saku Supir
+  other_costs: number;        // Biaya Lain-lain
   other_costs_notes?: string;
   total_operational_cost: number;
   net_margin: number;
@@ -56,3 +53,17 @@ export interface TripFinance {
 export interface TripWithFinance extends Trip {
   finance: TripFinance;
 }
+
+export interface DestinationCustomer {
+  id: string;
+  name: string;
+  address: string;
+  contact_person?: string;
+  phone?: string;
+  notes?: string;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type UserRole = 'super_admin' | 'admin';

@@ -185,11 +185,11 @@ export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
 
           {/* 6. BLOK TANDA TANGAN 3 PIHAK */}
           <div className="pt-2">
-            {/* Tanggal Kotabaru di atas kolom Yang Menyerahkan */}
+            {/* Tanggal Banjarmasin di atas kolom Yang Menyerahkan */}
             <div className="flex justify-end mb-2">
               <div className="w-[33%] text-center">
                 <span className="text-[12px] md:text-[13px] font-bold">
-                  Kotabaru, {formatDateIndo(trip.trip_date)}
+                  Banjarmasin, {formatDateIndo(trip.trip_date)}
                 </span>
               </div>
             </div>
