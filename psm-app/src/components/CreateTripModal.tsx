@@ -126,7 +126,7 @@ export function CreateTripModal({
   const [deliveryBy, setDeliveryBy] = useState('PT. PUTRA SAIJAAN MANDIRI');
   
   // Manual Cargo Fields (As requested by user: manual input)
-  const [quantityDisplay, setQuantityDisplay] = useState('5000 L');
+  const [quantityDisplay, setQuantityDisplay] = useState('5.000 L');
   const [goodsType, setGoodsType] = useState('BIOSOLAR(B50)');
   const [chargingTime, setChargingTime] = useState('S/D');
   const [cargoCondition, setCargoCondition] = useState('BAIK DAN CUKUP');
@@ -172,7 +172,7 @@ export function CreateTripModal({
       const normLoc = (editingTrip.loading_location || '').toUpperCase().includes('GLOBAL') ? 'GLOBAL' : 'SADP';
       setLoadingLocation(normLoc);
       setDeliveryBy(editingTrip.delivery_by || 'PT. PUTRA SAIJAAN MANDIRI');
-      setQuantityDisplay(editingTrip.quantity_display || '5000 L');
+      setQuantityDisplay(editingTrip.quantity_display || '5.000 L');
       setGoodsType(editingTrip.goods_type || 'BIOSOLAR(B50)');
       setChargingTime(editingTrip.charging_time || 'S/D');
       setCargoCondition(editingTrip.cargo_condition || 'BAIK DAN CUKUP');
@@ -447,12 +447,12 @@ export function CreateTripModal({
                     type="text"
                     value={quantityDisplay}
                     onChange={(e) => setQuantityDisplay(e.target.value)}
-                    placeholder="Contoh: 5000 L atau 10.000 L"
+                    placeholder="Contoh: 5.000 L atau 10.000 L"
                     required
                     className="w-full bg-slate-900 border border-amber-500/50 focus:border-amber-400 rounded-md px-3 py-2 text-sm text-amber-300 font-bold"
                   />
                   <span className="text-[10px] text-slate-400 mt-0.5 block">
-                    Ketik manual sesuai kapasitas aktual (cth: 5000 L, 10.000 L, 25 Ton)
+                    Ketik manual sesuai kapasitas aktual (cth: 5.000 L, 10.000 L, 25 Ton)
                   </span>
                 </div>
 

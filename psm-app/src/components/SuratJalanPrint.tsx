@@ -207,7 +207,7 @@ export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
 
             <div className="grid grid-cols-3 text-center text-[12px] md:text-[13px]">
               {/* Kolom 1: Yang Mengirim */}
-              <div className="flex flex-col justify-between h-40">
+              <div className="flex flex-col justify-between h-44">
                 <span className="font-bold">Yang Mengirim</span>
                 <div className="flex flex-col items-center">
                   <div className="w-3/4 border-b border-black mb-1"></div>
@@ -216,7 +216,7 @@ export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
               </div>
 
               {/* Kolom 2: Yang Menerima */}
-              <div className="flex flex-col justify-between h-40">
+              <div className="flex flex-col justify-between h-44">
                 <div>
                   <span className="font-bold block">TTD</span>
                   <span className="font-bold block">Yang Menerima</span>
@@ -228,16 +228,16 @@ export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
               </div>
 
               {/* Kolom 3: Yang Menyerahkan (PT. PSM Supplier) */}
-              <div className="flex flex-col justify-between h-40">
+              <div className="flex flex-col justify-between h-44">
                 <span className="font-bold">Yang Menyerahkan</span>
                 
-                {/* Visual Stamp PT. PSM */}
+                {/* Visual Stamp PT. PSM (Lebih Besar & Jelas) */}
                 <div className="flex flex-col items-center relative">
-                  <div className="absolute -top-14 opacity-85">
+                  <div className="absolute -top-20 opacity-95 pointer-events-none">
                     <img
                       src="/logopsm.png"
                       alt="Stamp PT. PSM"
-                      className="h-14 w-auto object-contain"
+                      className="h-24 w-auto object-contain drop-shadow-sm"
                     />
                   </div>
                   <div className="w-3/4 border-b border-black mb-1"></div>

@@ -45,25 +45,25 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     id: 'veh-4',
     plate_number: 'DA 8537 TG',
     default_driver_name: "RAFI'I",
-    vehicle_type: 'Truk Tangki BBM 5000 L',
+    vehicle_type: 'Truk Tangki BBM 5.000 L',
     is_active: true,
-    notes: 'Kapasitas 5000 L',
+    notes: 'Kapasitas 5.000 L',
   },
   {
     id: 'veh-5',
     plate_number: 'DA 8101 ZR',
     default_driver_name: 'RONI',
-    vehicle_type: 'Truk Tangki BBM 5000 L',
+    vehicle_type: 'Truk Tangki BBM 5.000 L',
     is_active: true,
-    notes: 'Kapasitas 5000 L',
+    notes: 'Kapasitas 5.000 L',
   },
   {
     id: 'veh-6',
     plate_number: 'DA 8278 JL',
     default_driver_name: 'ROBY',
-    vehicle_type: 'Truk Tangki BBM 5000 L',
+    vehicle_type: 'Truk Tangki BBM 5.000 L',
     is_active: true,
-    notes: 'Kapasitas 5000 L',
+    notes: 'Kapasitas 5.000 L',
   },
 ];
 
@@ -82,7 +82,7 @@ export const INITIAL_TRIPS: TripWithFinance[] = [
     seal_number: '050491/050492',
     loading_location: 'SADP',
     delivery_by: 'PT. PUTRA SAIJAAN MANDIRI / DA 8101 ZR',
-    quantity_display: '5000 L',
+    quantity_display: '5.000 L',
     goods_type: 'BIOSOLAR(B50)',
     charging_time: 'S/D',
     cargo_condition: 'BAIK DAN CUKUP',
@@ -117,7 +117,7 @@ export const INITIAL_TRIPS: TripWithFinance[] = [
     seal_number: '050510/050511',
     loading_location: 'GLOBAL',
     delivery_by: 'PT. PUTRA SAIJAAN MANDIRI / DA 8485 TG',
-    quantity_display: '10000 L',
+    quantity_display: '10.000 L',
     goods_type: 'BIOSOLAR(B50)',
     charging_time: '09:00 WITA',
     cargo_condition: 'BAIK DAN CUKUP',
@@ -152,7 +152,7 @@ export const INITIAL_TRIPS: TripWithFinance[] = [
     seal_number: '050525/050526',
     loading_location: 'SADP',
     delivery_by: 'PT. PUTRA SAIJAAN MANDIRI / DA 8530 GO',
-    quantity_display: '10000 L',
+    quantity_display: '10.000 L',
     goods_type: 'BIOSOLAR(B50)',
     charging_time: '14:30 WITA',
     cargo_condition: 'BAIK DAN CUKUP',
@@ -256,14 +256,28 @@ function setLocalDestinations(destinations: DestinationCustomer[]) {
 }
 
 export function getVehicleCapacity(vehicle?: Partial<Vehicle> | null): string {
-  if (!vehicle) return '5000 L';
+  if (!vehicle) return '5.000 L';
   const text = `${vehicle.plate_number || ''} ${vehicle.notes || ''} ${vehicle.vehicle_type || ''}`.toUpperCase();
   // 10.000 L: DA 8485 TG, DA 8530 GO, DA 8247 BV
   if (text.includes('8485') || text.includes('8530') || text.includes('8247') || text.includes('10')) {
     return '10.000 L';
   }
-  // 5000 L: DA 8537 TG, DA 8101 ZR, DA 8278 JL
-  return '5000 L';
+  // 5.000 L: DA 8537 TG, DA 8101 ZR, DA 8278 JL
+  return '5.000 L';
+}
+
+export function normalizeTrip(t: TripWithFinance): TripWithFinance {
+  let qty = t.quantity_display;
+  const plate = (t.plate_number || '').toUpperCase().replace(/\s+/g, '');
+  if (plate.includes('8101') || plate.includes('8537') || plate.includes('8278') || qty === '5000 L' || qty === '5000') {
+    qty = '5.000 L';
+  } else if (plate.includes('8485') || plate.includes('8530') || plate.includes('8247') || qty === '10000 L' || qty === '10000') {
+    qty = '10.000 L';
+  }
+  return {
+    ...t,
+    quantity_display: qty || '5.000 L',
+  };
 }
 
 export function normalizeVehicle(v: Vehicle): Vehicle {
@@ -301,16 +315,17 @@ function setLocalVehicles(vehicles: Vehicle[]) {
 }
 
 function getLocalTrips(): TripWithFinance[] {
-  if (typeof window === 'undefined') return INITIAL_TRIPS;
+  if (typeof window === 'undefined') return INITIAL_TRIPS.map(normalizeTrip);
   try {
     const data = localStorage.getItem(STORAGE_KEYS.TRIPS);
     if (!data) {
       localStorage.setItem(STORAGE_KEYS.TRIPS, JSON.stringify(INITIAL_TRIPS));
-      return INITIAL_TRIPS;
+      return INITIAL_TRIPS.map(normalizeTrip);
     }
-    return JSON.parse(data);
+    const parsed: TripWithFinance[] = JSON.parse(data);
+    return parsed.map(normalizeTrip);
   } catch {
-    return INITIAL_TRIPS;
+    return INITIAL_TRIPS.map(normalizeTrip);
   }
 }
 
@@ -373,7 +388,7 @@ export const DataService = {
           .order('trip_date', { ascending: false });
 
         if (!error && data && data.length > 0) {
-          return data.map((t) => ({
+          return data.map((t) => normalizeTrip({
             ...t,
             finance: Array.isArray(t.finance) ? t.finance[0] : t.finance,
           }));
