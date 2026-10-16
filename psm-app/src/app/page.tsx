@@ -155,19 +155,21 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       
       {/* 1. Navbar */}
-      <Navbar
-        onOpenCreateModal={handleOpenCreate}
-        onOpenVehicleModal={() => setIsVehicleModalOpen(true)}
-        onOpenDestinationModal={() => setIsDestinationModalOpen(true)}
-        vehiclesCount={vehicles.length}
-        destinationsCount={destinations.length}
-        onExportExcel={handleExportExcel}
-        currentUser={currentUser}
-        onLogout={handleLogout}
-      />
+      <div className="no-print print:hidden">
+        <Navbar
+          onOpenCreateModal={handleOpenCreate}
+          onOpenVehicleModal={() => setIsVehicleModalOpen(true)}
+          onOpenDestinationModal={() => setIsDestinationModalOpen(true)}
+          vehiclesCount={vehicles.length}
+          destinationsCount={destinations.length}
+          onExportExcel={handleExportExcel}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+        />
+      </div>
 
       {/* 2. Main Content Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className={`flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 ${printingTrip ? 'no-print print:hidden' : ''}`}>
         
         {/* KPI Dashboard Cards - Admin only sees ritase, Super Admin sees all */}
         <DashboardStats trips={trips} userRole={currentUser.role} />
@@ -611,7 +613,7 @@ export default function HomePage() {
       </main>
 
       {/* 4. Footer */}
-      <footer className="no-print bg-[#380412] border-t border-rose-900/60 text-slate-300 py-6 mt-12 text-xs">
+      <footer className="no-print print:hidden bg-[#380412] border-t border-rose-900/60 text-slate-300 py-6 mt-12 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="bg-white p-1 rounded shadow-sm shrink-0">
@@ -629,7 +631,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="text-slate-400 text-center sm:text-right">
-            <span>Sistem Surat Jalan BBM &amp; Margin Calculator Truk Tangki</span>
+            <span>Sistem Surat Jalan Armada &amp; Perhitungan Margin Operasional</span>
           </div>
         </div>
       </footer>

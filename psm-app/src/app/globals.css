@@ -27,10 +27,11 @@
 }
 
 /* Strict Print Styling for 1:1 Physical Document Output */
+/* Strict Print Styling for 1:1 Physical Document Output */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 12mm 10mm 12mm;
+    margin: 8mm 10mm 8mm 10mm;
   }
   
   html, body {
@@ -41,22 +42,55 @@
     print-color-adjust: exact !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
   }
 
-  .no-print,
+  /* Hide app navigation, main container, footer, and buttons during print */
   nav,
-  header.app-header,
+  main,
+  footer,
   aside,
+  header,
   button,
+  .no-print,
   .print-hide {
     display: none !important;
+  }
+
+  /* Ensure modal backdrop and container become clean full-page paper container */
+  .print-modal-overlay {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .print-modal-container {
+    position: static !important;
+    display: block !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    background: white !important;
   }
 
   .printable-document {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
     border: none !important;

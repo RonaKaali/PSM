@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TripWithFinance } from '@/types';
 import { PSMLogo } from './PSMLogo';
 import { Printer, X, Download } from 'lucide-react';
@@ -11,7 +11,18 @@ interface SuratJalanPrintProps {
 }
 
 export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
+  // Set document.title so the browser uses "Preview Cetak Surat Jalan: [nomor_sj]" as default PDF filename
+  useEffect(() => {
+    const originalTitle = document.title;
+    document.title = `Preview Cetak Surat Jalan: ${trip.trip_number}`;
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [trip.trip_number]);
+
   const handlePrint = () => {
+    const originalTitle = document.title;
+    document.title = `Preview Cetak Surat Jalan: ${trip.trip_number}`;
     window.print();
   };
 
@@ -33,12 +44,12 @@ export function SuratJalanPrint({ trip, onClose }: SuratJalanPrintProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-2 md:p-6 overflow-y-auto no-print">
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-2 md:p-6 overflow-y-auto print:p-0 print:static print:bg-white print:overflow-visible print-modal-overlay">
       {/* Container wrapper */}
-      <div className="relative bg-white text-black w-full max-w-4xl rounded-lg shadow-2xl overflow-hidden my-auto border border-slate-300">
+      <div className="relative bg-white text-black w-full max-w-4xl rounded-lg shadow-2xl overflow-hidden my-auto border border-slate-300 print:border-none print:shadow-none print:rounded-none print:max-w-none print:w-full print:m-0 print-modal-container">
         
         {/* Modal Action Header (Hidden during actual print) */}
-        <div className="no-print bg-[#4c0519] text-white px-6 py-3.5 flex items-center justify-between border-b border-rose-900">
+        <div className="no-print print:hidden bg-[#4c0519] text-white px-6 py-3.5 flex items-center justify-between border-b border-rose-900">
           <div className="flex items-center gap-3">
             <span className="bg-amber-400 text-black font-bold px-2 py-0.5 rounded text-xs">
               FORMAT FISIK 1:1
