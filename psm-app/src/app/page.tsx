@@ -12,6 +12,7 @@ import { VehicleManagerModal } from '@/components/VehicleManagerModal';
 import { DestinationManagerModal } from '@/components/DestinationManagerModal';
 import { ExportExcelModal } from '@/components/ExportExcelModal';
 import { LoginPage, AuthUser, UserRole } from '@/components/LoginPage';
+import { FleetLeaderboard } from '@/components/FleetLeaderboard';
 import {
   Search,
   Printer,
@@ -29,6 +30,7 @@ import {
   Shield,
   User,
   Building2,
+  Trophy,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -215,8 +217,8 @@ export default function HomePage() {
                         : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    <Truck className="w-4 h-4" />
-                    <span>Performa 6 Armada</span>
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    <span>Leaderboard &amp; Performa Armada</span>
                   </button>
                 </>
               )}
@@ -538,76 +540,14 @@ export default function HomePage() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 3: PERFORMA 6 ARMADA (SUPER ADMIN ONLY)              */}
+        {/* TAB 3: LEADERBOARD & PERFORMA ARMADA (SUPER ADMIN ONLY)  */}
         {/* ========================================================= */}
         {activeTab === 'fleet' && isSuperAdmin && (
-          <div className="space-y-6">
-            <div className="bg-slate-900/90 border border-rose-900/40 rounded-xl p-6 shadow-2xl">
-              <h3 className="text-base font-bold text-white mb-2 flex items-center gap-2">
-                <Truck className="w-5 h-5 text-amber-400" />
-                <span>Analisis Profitabilitas 6 Armada Truk PT. Putra Saijaan Mandiri</span>
-              </h3>
-              <p className="text-xs text-slate-400 mb-6">
-                Evaluasi performa ritase, efisiensi, dan total laba yang dihasilkan per nomor polisi:
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {vehicles.map((v) => {
-                  const vehTrips = trips.filter((t) => t.plate_number === v.plate_number);
-                  const vehRevenue = vehTrips.reduce((acc, t) => acc + (t.finance?.gross_revenue || 0), 0);
-                  const vehCost = vehTrips.reduce((acc, t) => acc + (t.finance?.total_operational_cost || 0), 0);
-                  const vehNet = vehTrips.reduce((acc, t) => acc + (t.finance?.net_margin || 0), 0);
-                  const vehMarginPct = vehRevenue > 0 ? (vehNet / vehRevenue) * 100 : 0;
-
-                  return (
-                    <div
-                      key={v.id}
-                      className="bg-slate-950 border border-rose-900/50 rounded-xl p-5 shadow hover:border-amber-400/60 transition"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <span className="text-base font-black text-amber-300 font-mono">
-                            {v.plate_number}
-                          </span>
-                          <span className="text-xs text-slate-300 block font-semibold">
-                            Supir: {v.default_driver_name}
-                          </span>
-                        </div>
-                        <span className="bg-[#4c0519] border border-rose-800 text-rose-200 text-[10px] font-bold px-2 py-0.5 rounded">
-                          {v.notes || v.vehicle_type}
-                        </span>
-                      </div>
-
-                      <div className="space-y-2 text-xs border-t border-slate-800 pt-3">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Total Ritase:</span>
-                          <span className="font-bold text-white">{vehTrips.length} Perjalanan</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Total Omset:</span>
-                          <span className="font-bold text-emerald-300">{formatRupiah(vehRevenue)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Total Biaya Jalan:</span>
-                          <span className="font-bold text-rose-300">{formatRupiah(vehCost)}</span>
-                        </div>
-                        <div className="flex justify-between border-t border-slate-800/80 pt-2 text-sm">
-                          <span className="font-bold text-slate-300">Total Laba Bersih:</span>
-                          <span className="font-black text-emerald-400">{formatRupiah(vehNet)}</span>
-                        </div>
-                        <div className="flex justify-between items-center pt-1">
-                          <span className="text-[11px] text-slate-400">Rata-rata Margin:</span>
-                          <span className="font-extrabold text-amber-400 text-xs">
-                            {Math.round(vehMarginPct * 10) / 10}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          <FleetLeaderboard
+            vehicles={vehicles}
+            trips={trips}
+            onViewTrip={(trip) => setPrintingTrip(trip)}
+          />
         )}
 
       </main>
