@@ -116,7 +116,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               Transportasi &amp; Distribusi BBM Industri
             </h3>
             <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-              Pengiriman terpadu armada tangki <strong className="text-amber-300">DA 8485 TG</strong> &amp; armada PSM ke seluruh pelabuhan, customer, dan site operasional di Kalimantan Selatan.
+              Pengiriman terpadu armada tangki <strong className="text-amber-300"></strong> &amp; armada PSM ke seluruh pelabuhan, customer, dan site operasional di Kalimantan.
             </p>
 
             <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-white/10 text-xs">
