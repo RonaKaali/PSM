@@ -565,7 +565,7 @@ export const DataService = {
     const yearTrips = currentTrips.filter((t) => t.trip_number?.includes(`/${year}`));
     const nextSeq = String(yearTrips.length + 1).padStart(3, '0');
 
-    return `${nextSeq}/PSM/${romanMonth}/KTB/${year}`;
+    return `${nextSeq}/PSM/${romanMonth}/BJM/${year}`;
   },
 
   async getDestinations(): Promise<DestinationCustomer[]> {
