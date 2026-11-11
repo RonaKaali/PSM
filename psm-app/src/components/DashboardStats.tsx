@@ -9,9 +9,10 @@ import { Truck, DollarSign, TrendingUp, Percent, Wallet } from 'lucide-react';
 interface DashboardStatsProps {
   trips: TripWithFinance[];
   userRole: UserRole;
+  periodLabel?: string;
 }
 
-export function DashboardStats({ trips, userRole }: DashboardStatsProps) {
+export function DashboardStats({ trips, userRole, periodLabel }: DashboardStatsProps) {
   // Admin only sees trip count card - no financial info
   const totalTrips = trips.length;
   const completedTrips = trips.filter((t) => t.status === 'completed').length;

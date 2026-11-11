@@ -28,12 +28,13 @@ interface FleetLeaderboardProps {
   vehicles: Vehicle[];
   trips: TripWithFinance[];
   onViewTrip?: (trip: TripWithFinance) => void;
+  periodLabel?: string;
 }
 
 type SortCriteria = 'profit' | 'trips' | 'revenue' | 'margin';
 type ViewMode = 'cards' | 'table';
 
-export function FleetLeaderboard({ vehicles, trips, onViewTrip }: FleetLeaderboardProps) {
+export function FleetLeaderboard({ vehicles, trips, onViewTrip, periodLabel }: FleetLeaderboardProps) {
   const [sortBy, setSortBy] = useState<SortCriteria>('profit');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [searchPlate, setSearchPlate] = useState('');
@@ -157,6 +158,11 @@ export function FleetLeaderboard({ vehicles, trips, onViewTrip }: FleetLeaderboa
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
               <span>Peringkat Armada PT. Putra Saijaan Mandiri</span>
+              {periodLabel && (
+                <span className="text-xs bg-amber-500/20 text-amber-300 font-bold px-2.5 py-0.5 rounded-full border border-amber-500/40">
+                  {periodLabel}
+                </span>
+              )}
             </h2>
             <p className="text-xs text-slate-300 mt-1 max-w-2xl">
               Evaluasi komprehensif siapa armada yang paling banyak beroperasi (ritase jalan), menghasilkan omset tertinggi, dan menyumbang laba bersih terbesar bagi perusahaan.

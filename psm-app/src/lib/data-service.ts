@@ -181,6 +181,27 @@ export function getRomanMonth(date: Date = new Date()): string {
   return months[date.getMonth()];
 }
 
+// Helper nama bulan Indonesia
+export const INDONESIAN_MONTH_NAMES = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
+export function formatMonthYearLabel(ym: string): string {
+  if (!ym || ym.length < 7) return ym;
+  const [yearStr, monthStr] = ym.split('-');
+  const monthIdx = parseInt(monthStr, 10) - 1;
+  const monthName = INDONESIAN_MONTH_NAMES[monthIdx] || monthStr;
+  return `${monthName} ${yearStr}`;
+}
+
+export function getCurrentYearMonth(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
 // Format Currency
 export function formatRupiah(amount: number): string {
   return new Intl.NumberFormat('id-ID', {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Vehicle, TripWithFinance, DestinationCustomer } from '@/types';
-import { DataService, formatRupiah } from '@/lib/data-service';
+import { DataService, formatRupiah, formatMonthYearLabel, getCurrentYearMonth } from '@/lib/data-service';
 import { exportTripsToExcel } from '@/lib/excel-export';
 import { Navbar } from '@/components/Navbar';
 import { DashboardStats } from '@/components/DashboardStats';
@@ -31,6 +31,8 @@ import {
   User,
   Building2,
   Trophy,
+  Archive,
+  Calendar,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -44,6 +46,9 @@ export default function HomePage() {
 
   // Active Tab (super_admin sees all 3, admin only trips)
   const [activeTab, setActiveTab] = useState<'trips' | 'margins' | 'fleet'>('trips');
+
+  // Month Period Filter State: 'current' (bulan berjalan) | 'all' (semua data) | 'YYYY-MM' (arsip bulan spesifik)
+  const [selectedMonth, setSelectedMonth] = useState<string>('current');
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,8 +86,43 @@ export default function HomePage() {
     initData();
   }, [currentUser]);
 
-  // Filtered Trips
-  const filteredTrips = trips.filter((t) => {
+  // Daftar bulan unik dari data perjalanan (format YYYY-MM)
+  const availableMonths = React.useMemo(() => {
+    const set = new Set<string>();
+    trips.forEach((t) => {
+      if (t.trip_date && t.trip_date.length >= 7) {
+        set.add(t.trip_date.substring(0, 7));
+      }
+    });
+    // Urutkan bulan terbaru di atas
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  }, [trips]);
+
+  // Bulan aktif saat ini dihitung di dalam useEffect/state agar tidak memicu error prerender Next.js
+  const [currentMonthYM, setCurrentMonthYM] = useState<string>('2026-11');
+
+  useEffect(() => {
+    setCurrentMonthYM(getCurrentYearMonth());
+  }, []);
+
+  // Trips yang difilter berdasarkan bulan terpilih (berjalan vs arsip)
+  const monthFilteredTrips = React.useMemo(() => {
+    if (selectedMonth === 'all') return trips;
+    if (selectedMonth === 'current') {
+      return trips.filter((t) => (t.trip_date || '').startsWith(currentMonthYM));
+    }
+    return trips.filter((t) => (t.trip_date || '').startsWith(selectedMonth));
+  }, [trips, selectedMonth, currentMonthYM]);
+
+  // Label periode aktif untuk ditampilkan di UI
+  const currentPeriodLabel = React.useMemo(() => {
+    if (selectedMonth === 'all') return 'Semua Periode (Gabungan)';
+    if (selectedMonth === 'current') return `Bulan Ini (${formatMonthYearLabel(currentMonthYM)})`;
+    return `Arsip ${formatMonthYearLabel(selectedMonth)}`;
+  }, [selectedMonth, currentMonthYM]);
+
+  // Filtered Trips (pencarian teks, nopol, status dalam periode bulan terpilih)
+  const filteredTrips = monthFilteredTrips.filter((t) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       t.trip_number.toLowerCase().includes(q) ||
@@ -174,7 +214,11 @@ export default function HomePage() {
       <main className={`flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 ${printingTrip ? 'no-print print:hidden' : ''}`}>
         
         {/* KPI Dashboard Cards - Admin only sees ritase, Super Admin sees all */}
-        <DashboardStats trips={trips} userRole={currentUser.role} />
+        <DashboardStats
+          trips={monthFilteredTrips}
+          userRole={currentUser.role}
+          periodLabel={currentPeriodLabel}
+        />
 
         {/* 3. Control Header: Tabs & Filters */}
         <div className="bg-slate-900/90 border border-rose-900/40 rounded-xl p-4 shadow-xl mb-6">
@@ -191,7 +235,7 @@ export default function HomePage() {
                 }`}
               >
                 <FileText className="w-4 h-4" />
-                <span>Daftar Surat Jalan ({trips.length})</span>
+                <span>Daftar Surat Jalan ({monthFilteredTrips.length})</span>
               </button>
 
               {/* Only Super Admin can access Margin & Fleet tabs */}
@@ -249,44 +293,89 @@ export default function HomePage() {
 
           {/* Search & Filter Inputs */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-4">
-            <div className="sm:col-span-6 relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari No. SJ, Nopol, Supir, Tujuan (Ship To), Port Point..."
-                className="w-full bg-slate-950 border border-slate-700/80 focus:border-rose-500 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none"
-              />
+            
+            {/* Periode Bulan & Arsip Dropdown */}
+            <div className="sm:col-span-4 relative">
+              <label className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block mb-1 flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                <span>Periode Bulan / Arsip</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="w-full bg-slate-950 border border-amber-500/50 hover:border-amber-400 focus:border-amber-400 rounded-lg px-3 py-2 text-xs font-bold text-amber-300 focus:outline-none transition cursor-pointer"
+                >
+                  <option value="current">
+                    🌟 Bulan Ini ({formatMonthYearLabel(currentMonthYM)})
+                  </option>
+                  <optgroup label="── ARSIP BULANAN LALU ──">
+                    {availableMonths
+                      .filter((ym) => ym !== currentMonthYM)
+                      .map((ym) => (
+                        <option key={ym} value={ym}>
+                          📁 Arsip: {formatMonthYearLabel(ym)}
+                        </option>
+                      ))}
+                  </optgroup>
+                  <option value="all">🌐 Semua Periode (Gabungan)</option>
+                </select>
+              </div>
             </div>
 
-            <div className="sm:col-span-3">
+            {/* Pencarian Teks */}
+            <div className="sm:col-span-4 relative flex flex-col justify-end">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                Pencarian Surat Jalan
+              </label>
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari No. SJ, Nopol, Supir, Tujuan, Port..."
+                  className="w-full bg-slate-950 border border-slate-700/80 focus:border-rose-500 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Filter Armada */}
+            <div className="sm:col-span-2 relative flex flex-col justify-end">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                Armada
+              </label>
               <select
                 value={vehicleFilter}
                 onChange={(e) => setVehicleFilter(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
               >
-                <option value="all">Semua Armada Truk</option>
+                <option value="all">Semua Truk</option>
                 {vehicles.map((v) => (
                   <option key={v.id} value={v.plate_number}>
-                    {v.plate_number} ({v.default_driver_name})
+                    {v.plate_number}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="sm:col-span-3">
+            {/* Filter Status */}
+            <div className="sm:col-span-2 relative flex flex-col justify-end">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                Status
+              </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
               >
                 <option value="all">Semua Status</option>
-                <option value="in_transit">Sedang Jalan (In Transit)</option>
-                <option value="completed">Selesai (Completed)</option>
-                <option value="draft">Draft (Rencana)</option>
+                <option value="in_transit">Sedang Jalan</option>
+                <option value="completed">Selesai</option>
+                <option value="draft">Draft</option>
               </select>
             </div>
+
           </div>
         </div>
 
@@ -297,8 +386,11 @@ export default function HomePage() {
           <div className="bg-slate-900/90 border border-rose-900/40 rounded-xl overflow-hidden shadow-2xl">
             <div className="px-6 py-4 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-white text-sm">
-                  Daftar Surat Jalan BBM &amp; Muatan
+                <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                  <span>Daftar Surat Jalan BBM &amp; Muatan</span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    {currentPeriodLabel}
+                  </span>
                 </h3>
                 <p className="text-xs text-slate-400">
                   Total {filteredTrips.length} surat jalan ditemukan
@@ -455,8 +547,11 @@ export default function HomePage() {
           <div className="bg-slate-900/90 border border-rose-900/40 rounded-xl overflow-hidden shadow-2xl">
             <div className="px-6 py-4 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-white text-sm">
-                  Rekapitulasi Keuangan &amp; Margin Laba Per Perjalanan
+                <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                  <span>Rekapitulasi Keuangan &amp; Margin Laba Per Perjalanan</span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    {currentPeriodLabel}
+                  </span>
                 </h3>
                 <p className="text-xs text-slate-400">
                   Pendapatan - (Uang Jalan + Biaya Lain-lain)
@@ -545,8 +640,9 @@ export default function HomePage() {
         {activeTab === 'fleet' && isSuperAdmin && (
           <FleetLeaderboard
             vehicles={vehicles}
-            trips={trips}
+            trips={monthFilteredTrips}
             onViewTrip={(trip) => setPrintingTrip(trip)}
+            periodLabel={currentPeriodLabel}
           />
         )}
 
