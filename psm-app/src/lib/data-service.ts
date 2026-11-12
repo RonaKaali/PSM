@@ -427,6 +427,58 @@ export const DataService = {
     return newVehicle;
   },
 
+  async updateVehicle(id: string, updates: Partial<Vehicle>): Promise<Vehicle | null> {
+    const cleanUpdates = {
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('vehicles')
+          .update(cleanUpdates)
+          .eq('id', id)
+          .select()
+          .single();
+        if (!error && data) {
+          const current = getLocalVehicles();
+          const updated = current.map((v) => (v.id === id ? { ...v, ...data } : v));
+          setLocalVehicles(updated);
+          return normalizeVehicle(data);
+        }
+      } catch (e) {
+        console.warn('Supabase update vehicle failed, fallback to local', e);
+      }
+    }
+
+    const current = getLocalVehicles();
+    const existing = current.find((v) => v.id === id);
+    if (!existing) return null;
+    const updatedVehicle = { ...existing, ...cleanUpdates };
+    const updated = current.map((v) => (v.id === id ? updatedVehicle : v));
+    setLocalVehicles(updated);
+    return normalizeVehicle(updatedVehicle);
+  },
+
+  async deleteVehicle(id: string): Promise<boolean> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.from('vehicles').delete().eq('id', id);
+        if (error) {
+          console.warn('Supabase delete vehicle failed:', error);
+        }
+      } catch (e) {
+        console.warn('Supabase delete vehicle failed, fallback to local', e);
+      }
+    }
+
+    const current = getLocalVehicles();
+    const filtered = current.filter((v) => v.id !== id);
+    setLocalVehicles(filtered);
+    return true;
+  },
+
   async getTrips(): Promise<TripWithFinance[]> {
     if (isSupabaseConfigured && supabase) {
       try {

@@ -195,7 +195,7 @@ export default function HomePage() {
 
   return (
     <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans ${printingTrip ? 'print:bg-white print:text-black print:min-h-0' : ''}`}>
-      
+
       {/* 1. Navbar */}
       <div className="no-print print:hidden">
         <Navbar
@@ -212,7 +212,7 @@ export default function HomePage() {
 
       {/* 2. Main Content Container */}
       <main className={`flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 ${printingTrip ? 'no-print print:hidden' : ''}`}>
-        
+
         {/* KPI Dashboard Cards - Admin only sees ritase, Super Admin sees all */}
         <DashboardStats
           trips={monthFilteredTrips}
@@ -223,16 +223,15 @@ export default function HomePage() {
         {/* 3. Control Header: Tabs & Filters */}
         <div className="bg-slate-900/90 border border-rose-900/40 rounded-xl p-4 shadow-xl mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-            
+
             {/* View Tabs - Admin only sees Daftar Surat Jalan */}
             <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-lg border border-slate-800">
               <button
                 onClick={() => setActiveTab('trips')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${
-                  activeTab === 'trips'
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${activeTab === 'trips'
                     ? 'bg-[#881337] text-white shadow'
                     : 'text-slate-400 hover:text-white'
-                }`}
+                  }`}
               >
                 <FileText className="w-4 h-4" />
                 <span>Daftar Surat Jalan ({monthFilteredTrips.length})</span>
@@ -243,11 +242,10 @@ export default function HomePage() {
                 <>
                   <button
                     onClick={() => setActiveTab('margins')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${
-                      activeTab === 'margins'
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${activeTab === 'margins'
                         ? 'bg-[#881337] text-white shadow'
                         : 'text-slate-400 hover:text-white'
-                    }`}
+                      }`}
                   >
                     <DollarSign className="w-4 h-4" />
                     <span>Kalkulator &amp; Laba Margin</span>
@@ -255,11 +253,10 @@ export default function HomePage() {
 
                   <button
                     onClick={() => setActiveTab('fleet')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${
-                      activeTab === 'fleet'
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer ${activeTab === 'fleet'
                         ? 'bg-[#881337] text-white shadow'
                         : 'text-slate-400 hover:text-white'
-                    }`}
+                      }`}
                   >
                     <Trophy className="w-4 h-4 text-amber-400" />
                     <span>Leaderboard &amp; Performa Armada</span>
@@ -293,7 +290,7 @@ export default function HomePage() {
 
           {/* Search & Filter Inputs */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-4">
-            
+
             {/* Periode Bulan & Arsip Dropdown */}
             <div className="sm:col-span-4 relative">
               <label className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block mb-1 flex items-center gap-1">
@@ -431,7 +428,7 @@ export default function HomePage() {
                   ) : (
                     filteredTrips.map((trip) => (
                       <tr key={trip.id} className="hover:bg-slate-800/40 transition">
-                        
+
                         {/* No. SJ */}
                         <td className="py-3.5 px-4 font-mono font-bold text-amber-300">
                           {trip.trip_number}
@@ -582,7 +579,7 @@ export default function HomePage() {
 
                     return (
                       <tr key={trip.id} className="hover:bg-slate-800/40 transition">
-                        
+
                         <td className="py-3.5 px-4 font-mono font-bold text-amber-300">
                           <div>{trip.trip_number}</div>
                           <div className="text-[10px] text-slate-500 font-sans">{trip.trip_date}</div>
@@ -614,13 +611,12 @@ export default function HomePage() {
                         </td>
 
                         <td className="py-3.5 px-4 text-center">
-                          <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-black ${
-                            isHealthy
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-black ${isHealthy
                               ? 'bg-emerald-950 border border-emerald-500/50 text-emerald-300'
                               : isWarning
-                              ? 'bg-amber-950 border border-amber-500/50 text-amber-300'
-                              : 'bg-rose-950 border border-rose-500/50 text-rose-300'
-                          }`}>
+                                ? 'bg-amber-950 border border-amber-500/50 text-amber-300'
+                                : 'bg-rose-950 border border-rose-500/50 text-rose-300'
+                            }`}>
                             {fin?.margin_percentage || 0}%
                           </span>
                         </td>
@@ -673,7 +669,7 @@ export default function HomePage() {
       </footer>
 
       {/* 5. Modals */}
-      
+
       {/* Create / Edit Trip Modal */}
       {isCreateModalOpen && (
         <CreateTripModal
